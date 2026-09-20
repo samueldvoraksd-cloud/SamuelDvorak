@@ -348,10 +348,10 @@ input:focus-visible {
 }
 
 .hero-tile__photo img {
-  width: 88px;
-  height: 88px;
+  width: 120px;
+  height: 120px;
   object-fit: cover;
-  object-position: 50% 20%;
+  object-position: 50% 30%;
   border-radius: var(--radius-sm);
   display: block;
 }
@@ -771,10 +771,12 @@ git commit -m "Add design tokens, stylesheet, shared partials, and AI/SEO meta w
 
 **Files:**
 - Create: `src/views/partials/newsletter-tile.ejs`
-- Already provided: `src/public/images/samuel.webp` — Samuel's real photo
-  (cockpit selfie, headset, Brazos Valley Flight Services polo), added
-  2026-09-19 ahead of this task. Nothing to create in Step 2; `index.ejs`
-  (Step 4) references this file directly.
+- Already provided: `src/public/images/samuel-avatar.webp` — Samuel's real
+  photo (cockpit selfie, headset, Brazos Valley Flight Services polo),
+  pre-cropped to a square centered on his face (source: `samuel.webp`,
+  kept alongside as the uncropped original in case a different crop is
+  needed later), added 2026-09-19 ahead of this task. Nothing to create
+  in Step 2; `index.ejs` (Step 4) references this file directly.
 - Create: `src/public/js/contact.js`
 - Modify: `src/views/index.ejs`
 - Modify: `src/views/partials/foot.ejs`
@@ -807,7 +809,7 @@ git commit -m "Add design tokens, stylesheet, shared partials, and AI/SEO meta w
 - [ ] **Step 2: Verify the real photo is present**
 
 ```bash
-test -f src/public/images/samuel.webp && echo "found"
+test -f src/public/images/samuel-avatar.webp && echo "found"
 ```
 Expected: prints `found`. (No creation step — this file was added directly
 to the repo ahead of this task; see Files above.)
@@ -831,7 +833,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <section class="hero-tile tile">
   <div class="hero-tile__photo">
-    <img src="/images/samuel.webp" alt="Samuel Dvorak in the cockpit, headset on" width="88" height="88">
+    <img src="/images/samuel-avatar.webp" alt="Samuel Dvorak in the cockpit, headset on" width="120" height="120">
   </div>
   <div>
     <h1><%= site.siteTitle %></h1>
@@ -880,7 +882,7 @@ curl -s http://localhost:3000/ | grep -q "I started at a Part 147 aviation maint
 curl -s http://localhost:3000/ | grep -q "Beyond The Pattern"
 curl -s http://localhost:3000/ | grep -q 'id="contact"'
 curl -s http://localhost:3000/ | grep -q ">Email me<"
-curl -s http://localhost:3000/ | grep -q 'src="/images/samuel.webp"'
+curl -s http://localhost:3000/ | grep -q 'src="/images/samuel-avatar.webp"'
 curl -s http://localhost:3000/ | grep -c "samueldvoraksd@gmail.com"
 ```
 Expected: first five greps match; the last command prints `0` (the full address never appears as one string — it's split into `data-user="samueldvoraksd"` and `data-domain="gmail.com"`).

@@ -111,13 +111,15 @@ contact tile's `id="contact"` — not a route).
     (Task 5) so Samuel can add real posts later without touching code.
 - **Profile photo — final, 2026-09-19.** A real photo (Samuel in the
   cockpit, headset on, Brazos Valley Flight Services polo) replaces the
-  gray placeholder box in the hero tile. Saved at
-  `src/public/images/samuel.webp`. The hero tile's photo slot is a small
-  square avatar, but the source photo is a tall portrait selfie, so the
-  `<img>` needs `object-fit: cover` with `object-position` biased toward
-  the top (his face/headset sits in the upper half of the frame) rather
-  than a pre-cropped square asset — lets the browser do the cropping
-  responsively instead of baking in one fixed crop.
+  gray placeholder box in the hero tile. Original saved at
+  `src/public/images/samuel.webp` (tall portrait selfie); a face-centered
+  square crop is saved alongside at `src/public/images/samuel-avatar.webp`
+  and is what the hero tile actually uses. Cropped server-side (Python/
+  Pillow) rather than relying on CSS `object-position` alone — an
+  object-position guess against the uncropped portrait cut off the face,
+  so the fix was a real crop, checked visually, not a percentage tweak.
+  Displayed at 120×120 (bigger than the original 88×88 placeholder size,
+  per Samuel's feedback).
 
 ## Newsletter integration (ConvertKit)
 
@@ -245,7 +247,7 @@ personal-site/
       404.ejs
     public/
       css/ (tokens.css, styles.css)
-      images/ (samuel.webp — real profile photo)
+      images/ (samuel.webp — original photo; samuel-avatar.webp — cropped, used in the hero tile)
       js/ (mobile nav toggle, contact.js, ask-ai.js)
       robots.txt
   docs/superpowers/specs/2026-09-19-personal-site-design.md
