@@ -1,6 +1,29 @@
 <%- include('partials/head', { site: site, pageTitle: 'Home', pageDescription: pageDescription, canonicalUrl: canonicalUrl, structuredData: structuredData, active: 'home' }) %>
 
-<h1><%= site.siteTitle %></h1>
-<p class="tagline"><%= site.tagline %></p>
+<section class="hero-tile tile">
+  <div class="hero-tile__photo">
+    <img src="/images/samuel-avatar.webp" alt="Samuel Dvorak in the cockpit, headset on" width="120" height="120">
+  </div>
+  <div>
+    <h1><%= site.siteTitle %></h1>
+    <p class="tagline"><%= site.tagline %></p>
+  </div>
+</section>
+
+<section class="bio-tile tile" aria-label="About Samuel">
+  <p class="bio-tile__label">About</p>
+  <% site.bio.forEach(function(paragraph) { %>
+    <p><%= paragraph %></p>
+  <% }); %>
+</section>
+
+<div class="two-col-row">
+  <%- include('partials/newsletter-tile', { site: site, subscribeStatus: typeof subscribeStatus !== 'undefined' ? subscribeStatus : undefined }) %>
+  <aside class="contact-tile" id="contact" aria-labelledby="contact-heading">
+    <h2 id="contact-heading">Get in touch</h2>
+    <p>Questions about flight training, or just want to say hi?</p>
+    <a id="contact-email-link" class="contact-tile__cta" href="#" data-user="samueldvoraksd" data-domain="gmail.com">Email me</a>
+  </aside>
+</div>
 
 <%- include('partials/foot', { site: site }) %>
