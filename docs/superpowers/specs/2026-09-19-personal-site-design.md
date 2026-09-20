@@ -52,8 +52,12 @@ see the dark-only note below.
   - `--color-muted: rgba(255,255,255,0.08)` (placeholder/avatar fill)
   - `--color-accent: #8B5CF6` (solid accent, for links/focus rings)
   - `--gradient-accent: linear-gradient(135deg, #6366F1, #8B5CF6)` (every
-    filled CTA: Subscribe, Email me, Ask-AI icon buttons, the contact tile
-    background)
+    filled CTA button: Subscribe, Email me, Ask-AI icon buttons — **not**
+    tile backgrounds; the contact tile is a standard glass tile like every
+    other tile, matching the newsletter tile, with only its "Email me"
+    button carrying the gradient. Originally the whole contact tile used a
+    solid gradient background; changed 2026-09-20 per Samuel's feedback —
+    he didn't want it visually distinct from the rest of the bento grid)
   - `--color-on-accent: #FFFFFF`
   - `--color-ring: #A5B4FC`
 - Tile styling: `border-radius: 14px`, `border: 1px solid var(--color-border)`,

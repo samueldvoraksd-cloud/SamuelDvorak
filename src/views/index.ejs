@@ -19,7 +19,7 @@
 
 <div class="two-col-row">
   <%- include('partials/newsletter-tile', { site: site, subscribeStatus: typeof subscribeStatus !== 'undefined' ? subscribeStatus : undefined }) %>
-  <aside class="contact-tile" id="contact" aria-labelledby="contact-heading">
+  <aside class="contact-tile tile" id="contact" aria-labelledby="contact-heading">
     <h2 id="contact-heading">Get in touch</h2>
     <p>Questions about flight training, or just want to say hi?</p>
     <a id="contact-email-link" class="contact-tile__cta" href="#" data-user="<%= site.contact.user %>" data-domain="<%= site.contact.domain %>">Email me</a>
