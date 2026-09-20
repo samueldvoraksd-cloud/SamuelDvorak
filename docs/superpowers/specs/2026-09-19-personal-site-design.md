@@ -30,43 +30,65 @@ content today. Not a CFI-lead-gen site — the goal is telling his story
 
 ## Visual design
 
-- Design system: Swiss Modernism 2.0 (editorial grid, clean hierarchy),
-  adapted from `ui-ux-pro-max --design-system` output
-- Palette (navy + sky-blue, aviation-appropriate — swapped in for the
-  design system's default pink accent):
-  - `--color-primary: #0F172A` (navy)
-  - `--color-on-primary: #FFFFFF`
-  - `--color-secondary: #334155`
-  - `--color-accent: #0369A1` (sky blue)
+**Superseded 2026-09-19** by a round of canvas exploration (5 color/type
+directions, then 5 layout directions, then 5 dark-glass color variants of the
+winning layout). Final direction: **Bento Indigo Glow** — a dark
+glassmorphic bento-grid design, modeled on the visual language of Samuel's
+own `cleaner` (PC Cleaner) app. This commits to a single dark visual world;
+see the dark-only note below.
+
+- Design pattern: bento grid — content lives in independent rounded glass
+  tiles (hero, bio, newsletter, contact, ask-ai), not a single continuous
+  page flow
+- Palette (dark glass, indigo/violet glow):
+  - `--color-bg-base: #140F28`
+  - Body background is a layered gradient, not a flat color:
+    `radial-gradient(circle at 18% 92%, rgba(139,92,246,0.35), transparent 55%), radial-gradient(circle at 88% 8%, rgba(99,102,241,0.25), transparent 50%), #140F28`
+  - `--color-foreground: #F5F3FF` (headings, high-emphasis text)
+  - `--color-foreground-soft: #D9D5EE` (body copy, e.g. bio paragraphs)
+  - `--color-muted-foreground: #A9A3C9` (secondary/caption text)
+  - `--color-card: rgba(255,255,255,0.05)` (glass tile fill)
+  - `--color-border: rgba(255,255,255,0.10)` (glass tile border)
+  - `--color-muted: rgba(255,255,255,0.08)` (placeholder/avatar fill)
+  - `--color-accent: #8B5CF6` (solid accent, for links/focus rings)
+  - `--gradient-accent: linear-gradient(135deg, #6366F1, #8B5CF6)` (every
+    filled CTA: Subscribe, Email me, Ask-AI icon buttons, the contact tile
+    background)
   - `--color-on-accent: #FFFFFF`
-  - `--color-background: #F8FAFC`
-  - `--color-foreground: #020617`
-  - `--color-card: #FFFFFF`
-  - `--color-muted: #E8ECF1`
-  - `--color-muted-foreground: #475569`
-  - `--color-border: #E2E8F0`
-  - `--color-ring: #0F172A`
-  - Dark mode: token overrides under `prefers-color-scheme: dark` (desaturated/lighter
-    tonal variants per `color-dark-mode` guidance, not raw inversion)
-- Typography: Public Sans (body/UI) + a serif display face for headlines
-  (e.g. Fraunces or Libre Bodoni — pick at implementation time by pairing check)
-- Layout: 12-col grid, mobile-first breakpoints at 375/768/1024/1440,
-  photo+bio with sidebar newsletter box on desktop, single column stacked
-  on mobile
-- Accessibility: 4.5:1 text contrast in both themes, visible focus rings,
-  `prefers-reduced-motion` respected, all interactive targets ≥44px
+  - `--color-ring: #A5B4FC`
+- Tile styling: `border-radius: 14px`, `border: 1px solid var(--color-border)`,
+  `background: var(--color-card)`, `backdrop-filter: blur(16px)` (glass
+  effect over the gradient background)
+- Typography: **Space Grotesk** (display/headings) + **Inter** (body/UI) —
+  replaces the earlier Fraunces + Public Sans pairing, which read too
+  editorial/warm for a dark glassmorphic tech aesthetic
+- Layout: bento grid, mobile-first breakpoints at 375/768/1024/1440. Desktop:
+  hero tile (full width) → bio tile (full width, since the bio is the full
+  four-paragraph story, not a condensed teaser — see Content model) →
+  newsletter tile + contact tile side by side → ask-ai tile (full width).
+  Tiles stack to one column below 768px.
+- **Dark-only, not adaptive light/dark.** This design commits to one visual
+  world, the way the `cleaner` app reference does — inverting it to a light
+  theme would break the aesthetic it's built around. This supersedes the
+  earlier "4.5:1 contrast in both themes" requirement: contrast is now
+  checked against this one dark background only, not against a light
+  counterpart, and there is no `prefers-color-scheme` branching in the CSS.
+- Accessibility: 4.5:1 text contrast against the dark background, visible
+  focus rings (`--color-ring`), `prefers-reduced-motion` respected, all
+  interactive targets ≥44px
 
 ## Pages & routes
 
 | Route | Purpose |
 |---|---|
-| `GET /` | Home/About — photo, bio, nav, newsletter sidebar box |
+| `GET /` | Home/About — bento grid: hero, bio (full story), newsletter tile, contact tile, ask-ai tile |
 | `GET /articles` | List of published articles (may be empty/1 post at launch) |
 | `GET /articles/:slug` | Single article page, rendered from Markdown |
 | `POST /api/subscribe` | Newsletter signup → ConvertKit; redirects back to `/` with a success/error query flag, no client JS required |
 | `GET *` (404) | Simple not-found page |
 
-Nav (v1): Home, Articles, Contact (Contact is an anchor/section, not a route).
+Nav (v1): Home, Articles, Contact (Contact is an anchor/section — the
+contact tile's `id="contact"` — not a route).
 
 ## Content model
 
@@ -76,9 +98,23 @@ Nav (v1): Home, Articles, Contact (Contact is an anchor/section, not a route).
   article.
 - `src/content/articles/*.md` — one file per post. Frontmatter: `title`,
   `slug`, `date`, `excerpt`. Body is Markdown.
-- Bio copy is being fine-tuned via a separate copy-editing pass (applying
-  Samuel's writing-cleanup rules) before it's placed into `site.json` —
-  tracked as a follow-up to this spec, not blocking the build.
+- **Bio copy — final, 2026-09-19.** `site.bio` is now the full four-paragraph
+  story (Part 147 school → A&P certs and the DA-42 flight → the Georgia-to-
+  Texas internship and ratings through the regional airline → teaching at
+  Brazos Valley today), not the shorter three-paragraph condensed version
+  explored earlier. The bento layout's bio tile was widened to full-width
+  specifically to hold this.
+  - **Open question:** this text is identical to the `mechanic-to-pilot`
+    article's body (Content model, Task 5 of the plan). Shipping both as-is
+    means the home page and that article carry duplicate content, which
+    dilutes canonical/SEO signal for both (works against the AI &
+    discoverability goals below). Options: (a) keep the article, but slim it
+    to something that isn't a word-for-word repeat of the home bio; (b) drop
+    the `mechanic-to-pilot` article for launch and ship Articles empty,
+    since the story now lives fully on the home page; (c) ship the
+    duplication for launch and resolve it later. **Not resolved yet** —
+    flagging for Samuel before Task 5 of the plan runs, since Task 5 is
+    where the article file gets written.
 
 ## Newsletter integration (ConvertKit)
 
@@ -199,7 +235,7 @@ personal-site/
       articles/*.md
     views/
       layout.ejs
-      partials/ (nav.ejs, newsletter-box.ejs, footer.ejs, ask-ai.ejs)
+      partials/ (nav.ejs, newsletter-tile.ejs, footer.ejs, ask-ai.ejs)
       index.ejs
       articles-list.ejs
       article.ejs
@@ -217,7 +253,8 @@ personal-site/
 No automated suite (YAGNI at this size). Verification is manual, in the
 browser preview: every route loads, nav works, newsletter form
 degrades gracefully without credentials, responsive at 375/768/1024,
-light + dark mode contrast checked.
+contrast checked against the dark background (single theme — see Visual
+design's dark-only note).
 
 ## Open items (not blocking build start)
 
