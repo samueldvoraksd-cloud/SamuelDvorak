@@ -1,6 +1,6 @@
 # Personal Site Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Task 7 is a manual browser QA pass and must be run by the orchestrating session directly (it needs the Browser pane), not delegated to a subagent.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Task 8 is a manual browser QA pass and must be run by the orchestrating session directly (it needs the Browser pane), not delegated to a subagent.
 
 **Goal:** Build Samuel's personal bio site — a Node.js/Express server rendering an About/home page, an articles section (launching with one post), a newsletter signup wired to ConvertKit with graceful degradation, and a lightly-obfuscated contact link.
 
@@ -1129,7 +1129,157 @@ git commit -m "Add catch-all 404 handler"
 
 ---
 
-## Task 7: Manual browser QA pass (run directly, not delegated)
+## Task 7: "Ask AI about me" block
+
+**Files:**
+- Create: `src/views/partials/ask-ai.ejs`
+- Create: `src/public/js/ask-ai.js`
+- Modify: `src/views/partials/foot.ejs`
+- Modify: `src/public/css/styles.css`
+
+**Interfaces:**
+- Consumes: nothing new (pure client-side; no server route)
+- Produces: nothing consumed by later tasks — this is the last content task before manual QA
+
+- [ ] **Step 1: Create `src/views/partials/ask-ai.ejs`**
+
+```html
+<section class="ask-ai" aria-labelledby="ask-ai-heading">
+  <h2 id="ask-ai-heading">Ask AI about me</h2>
+  <p>Curious about my background? Ask an AI assistant directly — I'll copy the prompt to your clipboard too, in case it doesn't carry over.</p>
+  <div class="ask-ai__buttons">
+    <button type="button" class="button ask-ai__btn" data-provider="chatgpt">ChatGPT</button>
+    <button type="button" class="button ask-ai__btn" data-provider="claude">Claude</button>
+    <button type="button" class="button ask-ai__btn" data-provider="perplexity">Perplexity</button>
+  </div>
+  <p class="ask-ai__status" data-ask-ai-status role="status" aria-live="polite"></p>
+</section>
+```
+
+- [ ] **Step 2: Create `src/public/js/ask-ai.js`**
+
+```js
+document.addEventListener('DOMContentLoaded', function () {
+  var container = document.querySelector('.ask-ai');
+  if (!container) return;
+
+  var status = container.querySelector('[data-ask-ai-status]');
+
+  var providers = {
+    chatgpt: {
+      label: 'ChatGPT',
+      buildUrl: function (prompt) {
+        return 'https://chatgpt.com/?q=' + encodeURIComponent(prompt);
+      },
+    },
+    claude: {
+      label: 'Claude',
+      buildUrl: function (prompt) {
+        return 'https://claude.ai/new?q=' + encodeURIComponent(prompt);
+      },
+    },
+    perplexity: {
+      label: 'Perplexity',
+      buildUrl: function (prompt) {
+        return 'https://www.perplexity.ai/search?q=' + encodeURIComponent(prompt);
+      },
+    },
+  };
+
+  function buildPrompt() {
+    var domain = window.location.hostname;
+    return 'Tell me about Samuel Dvorak based on ' + domain + '. Summarize who he is, what he does, and how to get in touch.';
+  }
+
+  container.querySelectorAll('.ask-ai__btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var provider = providers[btn.getAttribute('data-provider')];
+      if (!provider) return;
+
+      var prompt = buildPrompt();
+      var url = provider.buildUrl(prompt);
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(prompt).catch(function () {});
+      }
+
+      if (status) {
+        status.textContent = 'Prompt copied. Opening ' + provider.label + ' in a new tab — paste if it doesn\'t appear automatically.';
+      }
+
+      window.open(url, '_blank', 'noopener,noreferrer');
+    });
+  });
+});
+```
+
+- [ ] **Step 3: Modify `src/public/css/styles.css` — append the ask-ai styles**
+
+```css
+.ask-ai {
+  padding: var(--space-4) 0 var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.ask-ai__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.ask-ai__status {
+  margin-top: var(--space-2);
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground);
+  min-height: 1.2em;
+}
+```
+
+- [ ] **Step 4: Modify `src/views/partials/foot.ejs` to include the block and its script on every page**
+
+```html
+  </main>
+  <%- include('ask-ai') %>
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; <%= new Date().getFullYear() %> <%= site.siteTitle %></p>
+    </div>
+  </footer>
+  <script src="/js/contact.js" defer></script>
+  <script src="/js/ask-ai.js" defer></script>
+</body>
+</html>
+```
+
+- [ ] **Step 5: Verify the block renders on every page type and the prompt has no raw email/instruction text**
+
+Run: `npm run dev &`, wait ~1s, then:
+```bash
+curl -s http://localhost:3000/ | grep -q "Ask AI about me"
+curl -s http://localhost:3000/articles | grep -q "Ask AI about me"
+curl -s http://localhost:3000/articles/mechanic-to-pilot | grep -q "Ask AI about me"
+curl -s http://localhost:3000/this-page-does-not-exist | grep -q "Ask AI about me"
+curl -s http://localhost:3000/ | grep -q 'data-provider="chatgpt"'
+curl -s http://localhost:3000/ | grep -q 'data-provider="claude"'
+curl -s http://localhost:3000/ | grep -q 'data-provider="perplexity"'
+curl -s http://localhost:3000/ | grep -qi "gemini"
+```
+Expected: every grep matches except the last one, which must **not** match
+(exit code 1) — confirming Gemini isn't present anywhere on the page.
+
+Stop the server afterward.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/views/partials/ask-ai.ejs src/public/js/ask-ai.js src/public/css/styles.css src/views/partials/foot.ejs
+git commit -m "Add 'Ask AI about me' block to every page"
+```
+
+---
+
+## Task 8: Manual browser QA pass (run directly, not delegated)
 
 This task needs the Browser pane and is not a fit for a subagent — the orchestrating session runs it directly against `npm run dev` using `preview_start`.
 
@@ -1142,4 +1292,7 @@ This task needs the Browser pane and is not a fit for a subagent — the orchest
 - [ ] `resize_window` to 375px width: confirm no horizontal scroll, hero stacks to one column, nav wraps cleanly
 - [ ] `resize_window` with `colorScheme: "dark"`: confirm text stays readable against the dark background (no light-mode colors leaking through)
 - [ ] Reset `resize_window` to `preset: "desktop"` when done
+- [ ] Confirm the "Ask AI about me" block appears at the bottom of `/`, `/articles`, an article page, and the 404 page
+- [ ] Click each of the three buttons and confirm: a new tab opens to the right provider with the prompt visible in the input (or, if a provider ignores the `?q=` param, confirm the status line says the prompt was copied) — read the clipboard back via `javascript_tool` (`await navigator.clipboard.readText()`) to confirm the copied text matches the expected prompt
+- [ ] Confirm there is no Gemini button anywhere on the page
 - [ ] Report results back to Samuel; fix and re-check anything that fails before calling the build done

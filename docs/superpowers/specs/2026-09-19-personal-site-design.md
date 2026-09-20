@@ -95,6 +95,34 @@ Nav (v1): Home, Articles, Contact (Contact is an anchor/section, not a route).
   without JS); success/error shown near the form via a redirect query
   param read server-side into the template.
 
+## Ask AI about me
+
+A block at the bottom of every page (shared partial, not a route) with three
+buttons: ChatGPT, Claude, Perplexity. Gemini is excluded — as of this spec,
+it has no confirmed public URL-prefill mechanism, unlike the other three.
+
+- Clicking a button copies a prompt to the clipboard **and** opens the
+  provider in a new tab with the prompt pre-filled via that provider's
+  `?q=` query parameter:
+  - ChatGPT: `https://chatgpt.com/?q=<prompt>`
+  - Claude: `https://claude.ai/new?q=<prompt>`
+  - Perplexity: `https://www.perplexity.ai/search?q=<prompt>`
+  - Clipboard copy is a fallback in case a provider silently drops the
+    param — the visitor can paste if the box doesn't auto-fill. These
+    `?q=` params are undocumented/unofficial for at least Claude, so this
+    fallback is load-bearing, not decorative.
+- Prompt (built client-side, domain filled in from `window.location.hostname`
+  so it's correct regardless of where the site ends up hosted):
+  `Tell me about Samuel Dvorak based on <domain>. Summarize who he is, what
+  he does, and how to get in touch.`
+- No instruction telling the AI to email Samuel — a browser-opened chat
+  session can't act on Samuel's behalf (send email, etc.), only respond
+  with text. That instruction was dropped rather than shipped non-functional.
+- New tabs open with `noopener,noreferrer` (reverse-tabnabbing protection)
+- Buttons are plain-text (`<button>`, not `<a>` — the action is JS-driven),
+  not provider logos, avoiding brand-asset/trademark handling for three
+  external companies' marks
+
 ## File layout
 
 ```
@@ -116,7 +144,7 @@ personal-site/
       articles/*.md
     views/
       layout.ejs
-      partials/ (nav.ejs, newsletter-box.ejs, footer.ejs)
+      partials/ (nav.ejs, newsletter-box.ejs, footer.ejs, ask-ai.ejs)
       index.ejs
       articles-list.ejs
       article.ejs
@@ -124,7 +152,7 @@ personal-site/
     public/
       css/ (tokens.css, styles.css)
       images/
-      js/ (minimal — mobile nav toggle only)
+      js/ (mobile nav toggle, contact.js, ask-ai.js)
   docs/superpowers/specs/2026-09-19-personal-site-design.md
 ```
 
