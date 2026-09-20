@@ -1,6 +1,6 @@
 # Personal Site Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Task 8 is a manual browser QA pass and must be run by the orchestrating session directly (it needs the Browser pane), not delegated to a subagent.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Task 9 is a manual browser QA pass and must be run by the orchestrating session directly (it needs the Browser pane), not delegated to a subagent.
 
 **Goal:** Build Samuel's personal bio site — a Node.js/Express server rendering an About/home page, an articles section (launching with one post), a newsletter signup wired to ConvertKit with graceful degradation, and a lightly-obfuscated contact link.
 
@@ -22,6 +22,9 @@
 - Newsletter form is a plain HTML POST (no client JS required) and must degrade gracefully (clear "temporarily unavailable" message, no crash) when ConvertKit env vars are unset (spec: Newsletter integration)
 - Contact email must never appear as a single string in server-rendered HTML — split into `data-user`/`data-domain` attributes, joined client-side only (content brief: Contact)
 - Nav is exactly Home, Articles, Contact for v1 — no Courses/Podcast/Book Notes (spec: Non-goals)
+- The contact "Email me" control lives inside the newsletter box (`#contact`), not as a separate section — the nav's `/#contact` link targets that same element (design iteration, 2026-09-19)
+- Every page passes `pageDescription` (falling back to `site.siteDescription`) and, where applicable, `canonicalUrl` and `structuredData` (JSON-LD) into `partials/head.ejs`; 404 responses additionally pass `noindex: true` (spec: AI & search discoverability)
+- The "Ask AI about me" buttons are icon buttons showing each provider's real mark (inlined SVG, sourced from Simple Icons), not text labels (spec: Ask AI about me)
 
 ---
 
@@ -149,12 +152,13 @@ git commit -m "Scaffold Express + EJS server"
 
 ---
 
-## Task 2: Design tokens, stylesheet, and shared partials
+## Task 2: Design tokens, stylesheet, shared partials, and AI/SEO meta wiring
 
 **Files:**
 - Create: `src/content/site.json`
 - Create: `src/public/css/tokens.css`
 - Create: `src/public/css/styles.css`
+- Create: `src/services/url.js`
 - Create: `src/views/partials/head.ejs`
 - Create: `src/views/partials/foot.ejs`
 - Create: `src/views/404.ejs`
@@ -163,7 +167,7 @@ git commit -m "Scaffold Express + EJS server"
 
 **Interfaces:**
 - Consumes: Express app/static middleware from Task 1 (serves `src/public` at `/`)
-- Produces: `site.json` shape `{ siteTitle, tagline, bio: string[], nav: [{label, href}], newsletter: {name, description} }`, required by every later view. `partials/head.ejs` expects locals `{ site, pageTitle?, active? }`; `partials/foot.ejs` expects `{ site }`. `views/404.ejs` expects `{ site }` — later tasks (articles 404, catch-all 404) render this same view.
+- Produces: `site.json` shape `{ siteTitle, tagline, siteDescription, bio: string[], nav: [{label, href}], newsletter: {name, description} }`, required by every later view. `src/services/url.js` exports `canonicalUrl(req)` returning the page's absolute URL, used by every route from here on. `partials/head.ejs` expects locals `{ site, pageTitle?, pageDescription?, canonicalUrl?, structuredData?, noindex?, active? }`; `partials/foot.ejs` expects `{ site }`. `views/404.ejs` expects `{ site, pageDescription?, noindex? }` — later tasks (articles 404, catch-all 404) render this same view.
 
 - [ ] **Step 1: Create `src/content/site.json` with the final approved copy**
 
@@ -171,6 +175,7 @@ git commit -m "Scaffold Express + EJS server"
 {
   "siteTitle": "Samuel Dvorak",
   "tagline": "Mechanic-turned-pilot, now teaching others to fly",
+  "siteDescription": "Samuel Dvorak is a flight instructor and former aircraft mechanic teaching private, instrument, and commercial students at Brazos Valley Flight Services.",
   "bio": [
     "I didn't grow up dreaming about airplanes. I grew up taking things apart to see how they worked, mostly car engines on an old Honda Civic I never loved. When I found out airplane mechanic school existed, I figured wrenching on planes had to beat wrenching on cars. I was right, and it pulled me into aviation for good.",
     "I earned my Airframe and Powerplant certifications and started fixing trainer aircraft at a flight school. Then, after a maintenance job on a Diamond DA-42, my boss, also a pilot, took me along on the test flight. On that flight, I stopped wanting to fix airplanes and started wanting to fly them.",
@@ -522,7 +527,17 @@ input:focus-visible {
 }
 ```
 
-- [ ] **Step 4: Create `src/views/partials/head.ejs`**
+- [ ] **Step 4: Create `src/services/url.js`**
+
+```js
+function canonicalUrl(req) {
+  return `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+}
+
+module.exports = { canonicalUrl };
+```
+
+- [ ] **Step 5: Create `src/views/partials/head.ejs`**
 
 ```html
 <!DOCTYPE html>
@@ -531,11 +546,21 @@ input:focus-visible {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= typeof pageTitle !== 'undefined' && pageTitle ? pageTitle + ' — ' + site.siteTitle : site.siteTitle %></title>
+  <meta name="description" content="<%= typeof pageDescription !== 'undefined' && pageDescription ? pageDescription : site.siteDescription %>">
+  <% if (typeof noindex !== 'undefined' && noindex) { %>
+  <meta name="robots" content="noindex">
+  <% } %>
+  <% if (typeof canonicalUrl !== 'undefined' && canonicalUrl) { %>
+  <link rel="canonical" href="<%= canonicalUrl %>">
+  <% } %>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/styles.css">
+  <% if (typeof structuredData !== 'undefined' && structuredData) { %>
+  <script type="application/ld+json"><%- JSON.stringify(structuredData) %></script>
+  <% } %>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -554,7 +579,7 @@ input:focus-visible {
   <main id="main" class="container">
 ```
 
-- [ ] **Step 5: Create `src/views/partials/foot.ejs`**
+- [ ] **Step 6: Create `src/views/partials/foot.ejs`**
 
 ```html
   </main>
@@ -567,10 +592,10 @@ input:focus-visible {
 </html>
 ```
 
-- [ ] **Step 6: Create `src/views/404.ejs`**
+- [ ] **Step 7: Create `src/views/404.ejs`**
 
 ```html
-<%- include('partials/head', { site: site, pageTitle: 'Page not found', active: '' }) %>
+<%- include('partials/head', { site: site, pageTitle: 'Page not found', pageDescription: 'This page could not be found.', noindex: true, active: '' }) %>
 
 <section class="not-found">
   <h1>Page not found</h1>
@@ -580,10 +605,10 @@ input:focus-visible {
 <%- include('partials/foot', { site: site }) %>
 ```
 
-- [ ] **Step 7: Rewrite `src/views/index.ejs` to use the partials (content still minimal — full hero/bio arrives in Task 3)**
+- [ ] **Step 8: Rewrite `src/views/index.ejs` to use the partials (content still minimal — full hero/bio arrives in Task 3)**
 
 ```html
-<%- include('partials/head', { site: site, pageTitle: 'Home', active: 'home' }) %>
+<%- include('partials/head', { site: site, pageTitle: 'Home', pageDescription: pageDescription, canonicalUrl: canonicalUrl, structuredData: structuredData, active: 'home' }) %>
 
 <h1><%= site.siteTitle %></h1>
 <p class="tagline"><%= site.tagline %></p>
@@ -591,38 +616,61 @@ input:focus-visible {
 <%- include('partials/foot', { site: site }) %>
 ```
 
-- [ ] **Step 8: Modify `src/routes/index.js` to pass `site` into the view**
+- [ ] **Step 9: Modify `src/routes/index.js` to pass `site` and the AI/SEO meta locals into the view**
 
 ```js
 const express = require('express');
 const router = express.Router();
 const site = require('../content/site.json');
+const { canonicalUrl } = require('../services/url');
 
 router.get('/', (req, res) => {
-  res.render('index', { site });
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: site.siteTitle,
+    jobTitle: 'Certified Flight Instructor',
+    description: site.siteDescription,
+    worksFor: { '@type': 'Organization', name: 'Brazos Valley Flight Services' },
+    url: canonicalUrl(req),
+  };
+
+  res.render('index', {
+    site,
+    pageDescription: site.siteDescription,
+    canonicalUrl: canonicalUrl(req),
+    structuredData,
+  });
 });
 
 module.exports = router;
 ```
 
-- [ ] **Step 9: Verify nav, title, and stylesheet all render**
+- [ ] **Step 10: Verify nav, title, stylesheet, and meta tags all render**
 
 Run: `npm run dev &`, wait ~1s, then:
-`curl -s http://localhost:3000/`
-Expected: response contains `Samuel Dvorak`, `Mechanic-turned-pilot, now teaching others to fly`, `href="/articles"`, and `href="/css/tokens.css"`
+```bash
+curl -s http://localhost:3000/ | grep -q "Samuel Dvorak"
+curl -s http://localhost:3000/ | grep -q "Mechanic-turned-pilot, now teaching others to fly"
+curl -s http://localhost:3000/ | grep -q 'href="/articles"'
+curl -s http://localhost:3000/ | grep -q 'href="/css/tokens.css"'
+curl -s http://localhost:3000/ | grep -q '<meta name="description" content="Samuel Dvorak is a flight instructor'
+curl -s http://localhost:3000/ | grep -q '"@type":"Person"'
+```
+Expected: all greps match.
 
 Stop the server afterward.
 
-- [ ] **Step 10: Commit**
+- [ ] **Step 11: Commit**
 
 ```bash
-git add src/content/site.json src/public/css src/views/partials src/views/404.ejs src/views/index.ejs src/routes/index.js
-git commit -m "Add design tokens, stylesheet, and shared page partials"
+git add src/content/site.json src/public/css src/services/url.js src/views/partials src/views/404.ejs src/views/index.ejs src/routes/index.js
+git commit -m "Add design tokens, stylesheet, shared partials, and AI/SEO meta wiring"
 ```
 
 ---
 
-## Task 3: Full home page — hero, bio, newsletter box, contact
+## Task 3: Full home page — hero, bio, newsletter box + contact
 
 **Files:**
 - Create: `src/views/partials/newsletter-box.ejs`
@@ -630,15 +678,16 @@ git commit -m "Add design tokens, stylesheet, and shared page partials"
 - Create: `src/public/js/contact.js`
 - Modify: `src/views/index.ejs`
 - Modify: `src/views/partials/foot.ejs`
+- Modify: `src/public/css/styles.css`
 
 **Interfaces:**
 - Consumes: `site.json` shape from Task 2 (`site.bio`, `site.newsletter`); `subscribeStatus` local (optional, set by Task 4's route — `newsletter-box.ejs` must handle it being `undefined`)
-- Produces: `#contact-email-link` element with `data-user`/`data-domain` attributes, wired up by `public/js/contact.js` on `DOMContentLoaded`
+- Produces: `#contact-email-link` element with `data-user`/`data-domain` attributes, wired up by `public/js/contact.js` on `DOMContentLoaded`. The contact control lives inside `newsletter-box.ejs`, whose root `<aside>` carries `id="contact"` — that's what the nav's `/#contact` link (site.json, Task 2) scrolls to.
 
 - [ ] **Step 1: Create `src/views/partials/newsletter-box.ejs`**
 
 ```html
-<aside class="newsletter-box" aria-labelledby="newsletter-heading">
+<aside class="newsletter-box" id="contact" aria-labelledby="newsletter-heading">
   <h2 id="newsletter-heading"><%= site.newsletter.name %></h2>
   <p><%= site.newsletter.description %></p>
   <% if (typeof subscribeStatus !== 'undefined' && subscribeStatus === 'success') { %>
@@ -653,6 +702,7 @@ git commit -m "Add design tokens, stylesheet, and shared page partials"
     <input type="email" id="newsletter-email" name="email" required autocomplete="email" placeholder="you@example.com">
     <button type="submit">Subscribe</button>
   </form>
+  <a id="contact-email-link" class="button newsletter-box__contact" href="#" data-user="samueldvoraksd" data-domain="gmail.com">Email me</a>
 </aside>
 ```
 
@@ -682,7 +732,7 @@ document.addEventListener('DOMContentLoaded', function () {
 - [ ] **Step 4: Rewrite `src/views/index.ejs` with the full home page**
 
 ```html
-<%- include('partials/head', { site: site, pageTitle: 'Home', active: 'home' }) %>
+<%- include('partials/head', { site: site, pageTitle: 'Home', pageDescription: pageDescription, canonicalUrl: canonicalUrl, structuredData: structuredData, active: 'home' }) %>
 
 <section class="hero">
   <div class="hero__photo">
@@ -695,19 +745,13 @@ document.addEventListener('DOMContentLoaded', function () {
 </section>
 
 <div class="content-grid">
-  <article class="bio">
+  <section class="bio" aria-label="About Samuel">
     <% site.bio.forEach(function(paragraph) { %>
       <p><%= paragraph %></p>
     <% }); %>
-  </article>
+  </section>
   <%- include('partials/newsletter-box', { site: site, subscribeStatus: typeof subscribeStatus !== 'undefined' ? subscribeStatus : undefined }) %>
 </div>
-
-<section id="contact" class="contact">
-  <h2>Get in touch</h2>
-  <p>Questions about flight training, or just want to say hi?</p>
-  <a id="contact-email-link" class="button" href="#" data-user="samueldvoraksd" data-domain="gmail.com">Email me</a>
-</section>
 
 <%- include('partials/foot', { site: site }) %>
 ```
@@ -726,24 +770,37 @@ document.addEventListener('DOMContentLoaded', function () {
 </html>
 ```
 
-- [ ] **Step 6: Verify the full home page renders and the email is not exposed as raw text**
+- [ ] **Step 6: Modify `src/public/css/styles.css` — append the contact-link style**
+
+```css
+.newsletter-box__contact {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  margin-top: var(--space-2);
+}
+```
+
+- [ ] **Step 7: Verify the full home page renders and the email is not exposed as raw text**
 
 Run: `npm run dev &`, wait ~1s, then:
 ```bash
 curl -s http://localhost:3000/ | grep -q "I didn't grow up dreaming about airplanes"
 curl -s http://localhost:3000/ | grep -q "Beyond The Pattern"
-curl -s http://localhost:3000/ | grep -q "Get in touch"
+curl -s http://localhost:3000/ | grep -q 'id="contact"'
+curl -s http://localhost:3000/ | grep -q ">Email me<"
 curl -s http://localhost:3000/ | grep -c "samueldvoraksd@gmail.com"
 ```
-Expected: first three greps match; the last command prints `0` (the full address never appears as one string — it's split into `data-user="samueldvoraksd"` and `data-domain="gmail.com"`).
+Expected: first four greps match; the last command prints `0` (the full address never appears as one string — it's split into `data-user="samueldvoraksd"` and `data-domain="gmail.com"`).
 
 Stop the server afterward.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add src/views/partials/newsletter-box.ejs src/public/images src/public/js src/views/index.ejs src/views/partials/foot.ejs
-git commit -m "Build full home page: hero, bio, newsletter box, contact"
+git add src/views/partials/newsletter-box.ejs src/public/images src/public/js src/views/index.ejs src/views/partials/foot.ejs src/public/css/styles.css
+git commit -m "Build full home page: hero, bio, newsletter box with contact"
 ```
 
 ---
@@ -820,6 +877,7 @@ module.exports = router;
 const express = require('express');
 const router = express.Router();
 const site = require('../content/site.json');
+const { canonicalUrl } = require('../services/url');
 
 router.get('/', (req, res) => {
   let subscribeStatus;
@@ -831,7 +889,23 @@ router.get('/', (req, res) => {
     subscribeStatus = 'error';
   }
 
-  res.render('index', { site, subscribeStatus });
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: site.siteTitle,
+    jobTitle: 'Certified Flight Instructor',
+    description: site.siteDescription,
+    worksFor: { '@type': 'Organization', name: 'Brazos Valley Flight Services' },
+    url: canonicalUrl(req),
+  };
+
+  res.render('index', {
+    site,
+    subscribeStatus,
+    pageDescription: site.siteDescription,
+    canonicalUrl: canonicalUrl(req),
+    structuredData,
+  });
 });
 
 module.exports = router;
@@ -893,8 +967,8 @@ git commit -m "Wire newsletter signup to ConvertKit with graceful degradation"
 - Modify: `server.js`
 
 **Interfaces:**
-- Consumes: nothing new
-- Produces: `articlesService.getAll()` returning `Array<{ slug, title, date, excerpt }>` sorted newest-first; `articlesService.getBySlug(slug)` returning `{ slug, title, date, excerpt, html } | null`. Both used only by `src/routes/articles.js`.
+- Consumes: `canonicalUrl(req)` from `src/services/url.js` (Task 2)
+- Produces: `articlesService.getAll()` returning `Array<{ slug, title, date, excerpt }>` sorted newest-first; `articlesService.getBySlug(slug)` returning `{ slug, title, date, excerpt, html } | null`. Both used only by `src/routes/articles.js`, which Task 8 also imports for `/llms.txt`.
 
 - [ ] **Step 1: Create `src/content/articles/mechanic-to-pilot.md`**
 
@@ -960,17 +1034,40 @@ const express = require('express');
 const router = express.Router();
 const articlesService = require('../services/articles');
 const site = require('../content/site.json');
+const { canonicalUrl } = require('../services/url');
 
 router.get('/', (req, res) => {
-  res.render('articles-list', { site, articles: articlesService.getAll() });
+  res.render('articles-list', {
+    site,
+    articles: articlesService.getAll(),
+    pageDescription: 'Writing on aviation, flight training, and the path from aircraft mechanic to airline pilot.',
+    canonicalUrl: canonicalUrl(req),
+  });
 });
 
 router.get('/:slug', (req, res) => {
   const article = articlesService.getBySlug(req.params.slug);
   if (!article) {
-    return res.status(404).render('404', { site });
+    return res.status(404).render('404', { site, pageDescription: 'This page could not be found.', noindex: true });
   }
-  res.render('article', { site, article });
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.excerpt,
+    datePublished: article.date,
+    author: { '@type': 'Person', name: site.siteTitle },
+    url: canonicalUrl(req),
+  };
+
+  res.render('article', {
+    site,
+    article,
+    pageDescription: article.excerpt,
+    canonicalUrl: canonicalUrl(req),
+    structuredData,
+  });
 });
 
 module.exports = router;
@@ -979,7 +1076,7 @@ module.exports = router;
 - [ ] **Step 4: Create `src/views/articles-list.ejs`**
 
 ```html
-<%- include('partials/head', { site: site, pageTitle: 'Articles', active: 'articles' }) %>
+<%- include('partials/head', { site: site, pageTitle: 'Articles', pageDescription: pageDescription, canonicalUrl: canonicalUrl, active: 'articles' }) %>
 
 <section class="articles-list">
   <h1>Articles</h1>
@@ -988,12 +1085,14 @@ module.exports = router;
   <% } else { %>
     <ul>
       <% articles.forEach(function(article) { %>
-        <li class="article-card">
-          <a href="/articles/<%= article.slug %>">
-            <h2><%= article.title %></h2>
-            <p class="article-card__date"><%= article.date %></p>
-            <p><%= article.excerpt %></p>
-          </a>
+        <li>
+          <article class="article-card">
+            <a href="/articles/<%= article.slug %>">
+              <h2><%= article.title %></h2>
+              <p class="article-card__date"><%= article.date %></p>
+              <p><%= article.excerpt %></p>
+            </a>
+          </article>
         </li>
       <% }); %>
     </ul>
@@ -1006,7 +1105,7 @@ module.exports = router;
 - [ ] **Step 5: Create `src/views/article.ejs`**
 
 ```html
-<%- include('partials/head', { site: site, pageTitle: article.title, active: 'articles' }) %>
+<%- include('partials/head', { site: site, pageTitle: article.title, pageDescription: pageDescription, canonicalUrl: canonicalUrl, structuredData: structuredData, active: 'articles' }) %>
 
 <article class="article-detail">
   <h1><%= article.title %></h1>
@@ -1053,9 +1152,11 @@ Run: `npm run dev &`, wait ~1s, then:
 ```bash
 curl -s http://localhost:3000/articles | grep -q "The Mechanic Who Became a Pilot"
 curl -s http://localhost:3000/articles/mechanic-to-pilot | grep -q "Bush Intercontinental"
+curl -s http://localhost:3000/articles/mechanic-to-pilot | grep -q '"@type":"Article"'
+curl -s http://localhost:3000/articles/mechanic-to-pilot | grep -q '<meta name="description" content="How one test flight'
 curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/articles/does-not-exist
 ```
-Expected: first two greps match; the last command prints `404`.
+Expected: first four greps match; the last command prints `404`.
 
 Stop the server afterward.
 
@@ -1101,7 +1202,7 @@ app.use('/articles', articlesRouter);
 app.use('/api/subscribe', subscribeRouter);
 
 app.use((req, res) => {
-  res.status(404).render('404', { site });
+  res.status(404).render('404', { site, pageDescription: 'This page could not be found.', noindex: true });
 });
 
 app.listen(PORT, () => {
@@ -1115,8 +1216,9 @@ Run: `npm run dev &`, wait ~1s, then:
 ```bash
 curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/this-page-does-not-exist
 curl -s http://localhost:3000/this-page-does-not-exist | grep -q "Page not found"
+curl -s http://localhost:3000/this-page-does-not-exist | grep -q '<meta name="robots" content="noindex">'
 ```
-Expected: first command prints `404`; second grep matches.
+Expected: first command prints `404`; both greps match.
 
 Stop the server afterward.
 
@@ -1143,14 +1245,31 @@ git commit -m "Add catch-all 404 handler"
 
 - [ ] **Step 1: Create `src/views/partials/ask-ai.ejs`**
 
+Each button is an icon button showing that provider's real mark — inlined SVG (sourced from [Simple Icons](https://github.com/simple-icons/simple-icons), MIT-licensed), not a runtime fetch. The icon is `aria-hidden` since the adjacent visible label and the button's own `aria-label` already name it.
+
 ```html
 <section class="ask-ai" aria-labelledby="ask-ai-heading">
   <h2 id="ask-ai-heading">Ask AI about me</h2>
   <p>Curious about my background? Ask an AI assistant directly — I'll copy the prompt to your clipboard too, in case it doesn't carry over.</p>
   <div class="ask-ai__buttons">
-    <button type="button" class="button ask-ai__btn" data-provider="chatgpt">ChatGPT</button>
-    <button type="button" class="button ask-ai__btn" data-provider="claude">Claude</button>
-    <button type="button" class="button ask-ai__btn" data-provider="perplexity">Perplexity</button>
+    <div class="ask-ai__item">
+      <button type="button" class="ask-ai__btn" data-provider="chatgpt" aria-label="Ask ChatGPT about Samuel">
+        <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg>
+      </button>
+      <span class="ask-ai__label">ChatGPT</span>
+    </div>
+    <div class="ask-ai__item">
+      <button type="button" class="ask-ai__btn" data-provider="claude" aria-label="Ask Claude about Samuel">
+        <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg>
+      </button>
+      <span class="ask-ai__label">Claude</span>
+    </div>
+    <div class="ask-ai__item">
+      <button type="button" class="ask-ai__btn" data-provider="perplexity" aria-label="Ask Perplexity about Samuel">
+        <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true"><path d="M22.3977 7.0896h-2.3106V.0676l-7.5094 6.3542V.1577h-1.1554v6.1966L4.4904 0v7.0896H1.6023v10.3976h2.8882V24l6.932-6.3591v6.2005h1.1554v-6.0469l6.9318 6.1807v-6.4879h2.8882V7.0896zm-3.4657-4.531v4.531h-5.355l5.355-4.531zm-13.2862.0676 4.8691 4.4634H5.6458V2.6262zM2.7576 16.332V8.245h7.8476l-6.1149 6.1147v1.9723H2.7576zm2.8882 5.0404v-3.8852h.0001v-2.6488l5.7763-5.7764v7.0111l-5.7764 5.2993zm12.7086.0248-5.7766-5.1509V9.0618l5.7766 5.7766v6.5588zm2.8882-5.0652h-1.733v-1.9723L13.3948 8.245h7.8478v8.087z"/></svg>
+      </button>
+      <span class="ask-ai__label">Perplexity</span>
+    </div>
   </div>
   <p class="ask-ai__status" data-ask-ai-status role="status" aria-live="polite"></p>
 </section>
@@ -1224,8 +1343,35 @@ document.addEventListener('DOMContentLoaded', function () {
 .ask-ai__buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-3);
   margin-top: var(--space-2);
+}
+
+.ask-ai__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.ask-ai__btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ask-ai__btn:hover { opacity: 0.9; }
+
+.ask-ai__label {
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground);
 }
 
 .ask-ai__status {
@@ -1279,12 +1425,148 @@ git commit -m "Add 'Ask AI about me' block to every page"
 
 ---
 
-## Task 8: Manual browser QA pass (run directly, not delegated)
+## Task 8: AI discoverability — `/llms.txt` and `/robots.txt`
+
+**Files:**
+- Create: `src/routes/llms.js`
+- Create: `src/public/robots.txt`
+- Modify: `server.js`
+
+**Interfaces:**
+- Consumes: `articlesService.getAll()` and `site.json` (Task 5, Task 2)
+- Produces: `GET /llms.txt` (route); `GET /robots.txt` (static file, served automatically by the existing `express.static` middleware — no route needed)
+
+- [ ] **Step 1: Create `src/routes/llms.js`**
+
+```js
+const express = require('express');
+const router = express.Router();
+const site = require('../content/site.json');
+const articlesService = require('../services/articles');
+
+router.get('/', (req, res) => {
+  const base = `${req.protocol}://${req.get('host')}`;
+  const articles = articlesService.getAll();
+
+  const lines = [
+    `# ${site.siteTitle}`,
+    '',
+    `> ${site.tagline}`,
+    '',
+    site.siteDescription,
+    '',
+    '## Pages',
+    '',
+    `- [Home](${base}/): Bio and background`,
+    `- [Articles](${base}/articles): Writing on aviation and flight training`,
+  ];
+
+  if (articles.length > 0) {
+    lines.push('', '## Articles', '');
+    articles.forEach((article) => {
+      lines.push(`- [${article.title}](${base}/articles/${article.slug}): ${article.excerpt}`);
+    });
+  }
+
+  res.type('text/plain').send(lines.join('\n') + '\n');
+});
+
+module.exports = router;
+```
+
+- [ ] **Step 2: Create `src/public/robots.txt`**
+
+```
+User-agent: *
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+```
+
+- [ ] **Step 3: Modify `server.js` to mount the llms.txt router**
+
+```js
+require('dotenv').config();
+const express = require('express');
+const path = require('path');
+const indexRouter = require('./src/routes/index');
+const articlesRouter = require('./src/routes/articles');
+const subscribeRouter = require('./src/routes/subscribe');
+const llmsRouter = require('./src/routes/llms');
+const site = require('./src/content/site.json');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'src', 'views'));
+app.use(express.static(path.join(__dirname, 'src', 'public')));
+app.use(express.urlencoded({ extended: false }));
+
+app.use('/', indexRouter);
+app.use('/articles', articlesRouter);
+app.use('/api/subscribe', subscribeRouter);
+app.use('/llms.txt', llmsRouter);
+
+app.use((req, res) => {
+  res.status(404).render('404', { site, pageDescription: 'This page could not be found.', noindex: true });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
+```
+
+- [ ] **Step 4: Verify both endpoints**
+
+Run: `npm run dev &`, wait ~1s, then:
+```bash
+curl -s http://localhost:3000/llms.txt | grep -q "# Samuel Dvorak"
+curl -s http://localhost:3000/llms.txt | grep -q "## Articles"
+curl -s http://localhost:3000/llms.txt | grep -q "The Mechanic Who Became a Pilot"
+curl -s -i http://localhost:3000/llms.txt | grep -qi "content-type: text/plain"
+curl -s http://localhost:3000/robots.txt | grep -q "User-agent: GPTBot"
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/robots.txt
+```
+Expected: all greps match; the last command prints `200`.
+
+Stop the server afterward.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/routes/llms.js src/public/robots.txt server.js
+git commit -m "Add /llms.txt and /robots.txt for AI/search discoverability"
+```
+
+---
+
+## Task 9: Manual browser QA pass (run directly, not delegated)
 
 This task needs the Browser pane and is not a fit for a subagent — the orchestrating session runs it directly against `npm run dev` using `preview_start`.
 
 - [ ] Start the dev server via `preview_start` and open `/`
-- [ ] Confirm nav (Home/Articles/Contact), hero, bio, newsletter box, and contact button all render as expected
+- [ ] Confirm nav (Home/Articles/Contact), hero, bio, and the newsletter box render as expected
+- [ ] Confirm the "Email me" button sits directly under "Subscribe" inside the newsletter box, and that clicking the nav's "Contact" link scrolls to that same box
 - [ ] Click "Email me" and confirm the resulting `href` is `mailto:samueldvoraksd@gmail.com` (constructed by `contact.js`, not present in the initial HTML)
 - [ ] Submit the newsletter form (no ConvertKit credentials yet) and confirm the "Signup isn't connected yet" message appears without a server error
 - [ ] Visit `/articles`, confirm the one post is listed; click into it and confirm the full body renders
@@ -1292,7 +1574,11 @@ This task needs the Browser pane and is not a fit for a subagent — the orchest
 - [ ] `resize_window` to 375px width: confirm no horizontal scroll, hero stacks to one column, nav wraps cleanly
 - [ ] `resize_window` with `colorScheme: "dark"`: confirm text stays readable against the dark background (no light-mode colors leaking through)
 - [ ] Reset `resize_window` to `preset: "desktop"` when done
-- [ ] Confirm the "Ask AI about me" block appears at the bottom of `/`, `/articles`, an article page, and the 404 page
+- [ ] Confirm the "Ask AI about me" block appears at the bottom of `/`, `/articles`, an article page, and the 404 page, and that each button shows that provider's real icon (not text)
 - [ ] Click each of the three buttons and confirm: a new tab opens to the right provider with the prompt visible in the input (or, if a provider ignores the `?q=` param, confirm the status line says the prompt was copied) — read the clipboard back via `javascript_tool` (`await navigator.clipboard.readText()`) to confirm the copied text matches the expected prompt
 - [ ] Confirm there is no Gemini button anywhere on the page
+- [ ] View source on `/` and confirm a `<meta name="description">`, a `<link rel="canonical">`, and an `application/ld+json` block with `"@type":"Person"` are present
+- [ ] View source on the article page and confirm its JSON-LD is `"@type":"Article"` with the excerpt as `description`, and that its meta description also matches the excerpt
+- [ ] View source on the 404 page and confirm `<meta name="robots" content="noindex">` is present
+- [ ] Visit `/llms.txt` and confirm it lists the site and the one article; visit `/robots.txt` and confirm it loads and lists the named AI crawlers
 - [ ] Report results back to Samuel; fix and re-check anything that fails before calling the build done
