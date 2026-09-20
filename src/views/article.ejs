@@ -1,0 +1,12 @@
+<%- include('partials/head', { site: site, pageTitle: article.title, pageDescription: pageDescription, canonicalUrl: canonicalUrl, structuredData: structuredData, active: 'articles' }) %>
+
+<article class="article-detail">
+  <h1><%= article.title %></h1>
+  <p class="article-detail__date"><%= article.date %></p>
+  <div class="article-detail__body">
+    <%- article.html %>
+  </div>
+  <p><a href="/articles">&larr; Back to articles</a></p>
+</article>
+
+<%- include('partials/foot', { site: site }) %>

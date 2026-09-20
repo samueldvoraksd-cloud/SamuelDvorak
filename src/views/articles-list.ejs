@@ -1,0 +1,24 @@
+<%- include('partials/head', { site: site, pageTitle: 'Articles', pageDescription: pageDescription, canonicalUrl: canonicalUrl, active: 'articles' }) %>
+
+<section class="articles-list">
+  <h1>Articles</h1>
+  <% if (articles.length === 0) { %>
+    <p class="empty-state">Nothing published yet — check back soon.</p>
+  <% } else { %>
+    <ul>
+      <% articles.forEach(function(article) { %>
+        <li>
+          <article class="article-card">
+            <a href="/articles/<%= article.slug %>">
+              <h2><%= article.title %></h2>
+              <p class="article-card__date"><%= article.date %></p>
+              <p><%= article.excerpt %></p>
+            </a>
+          </article>
+        </li>
+      <% }); %>
+    </ul>
+  <% } %>
+</section>
+
+<%- include('partials/foot', { site: site }) %>
