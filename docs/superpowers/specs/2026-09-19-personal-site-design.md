@@ -119,9 +119,62 @@ it has no confirmed public URL-prefill mechanism, unlike the other three.
   session can't act on Samuel's behalf (send email, etc.), only respond
   with text. That instruction was dropped rather than shipped non-functional.
 - New tabs open with `noopener,noreferrer` (reverse-tabnabbing protection)
-- Buttons are plain-text (`<button>`, not `<a>` — the action is JS-driven),
-  not provider logos, avoiding brand-asset/trademark handling for three
-  external companies' marks
+- Buttons are `<button>` (not `<a>` — the action is JS-driven), each an icon
+  button showing that provider's real mark (sourced from
+  [Simple Icons](https://github.com/simple-icons/simple-icons), inlined as
+  SVG — no runtime fetch, so it works within the CSP-style constraints of
+  the canvas preview and needs no extra dependency in the real site either),
+  with an `aria-label` (icon-only buttons need a text alternative) and a
+  small visible caption underneath for clarity
+
+## AI & search discoverability
+
+The site should be easy for both search crawlers and AI assistants (the ones
+linked from the "Ask AI about me" block, and general web-browsing LLMs) to
+read and cite correctly.
+
+- **Meta descriptions on every page**, via a `pageDescription` local read by
+  `partials/head.ejs`, falling back to `site.siteDescription`:
+  - Home: `site.siteDescription` — a one-sentence, factual summary of who
+    Samuel is and what he does
+  - Articles list: a short static description of the articles section
+  - Article detail: the article's own `excerpt` frontmatter field (already
+    exists in the content model — no new data needed)
+  - 404: also gets `<meta name="robots" content="noindex">` so it's never
+    indexed or cited as real content
+- **Canonical URLs**: every page computes its own absolute canonical URL
+  server-side from the request (`req.protocol` + `req.get('host')` +
+  `req.originalUrl`), via a small `src/services/url.js` helper — same
+  "don't hardcode a domain that isn't chosen yet" approach already used for
+  the Ask AI prompt's `window.location.hostname`. Rendered as both
+  `<link rel="canonical">` and the `url` field of that page's structured data.
+- **Structured data (JSON-LD)**: a `<script type="application/ld+json">`
+  block per page, built server-side and passed into `head.ejs` as a
+  `structuredData` local:
+  - Home: `schema.org/Person` — name, job title, `worksFor` (Brazos Valley
+    Flight Services), description, canonical url
+  - Article detail: `schema.org/Article` — headline, description (the
+    excerpt), datePublished, author, canonical url
+- **Semantic HTML**: the home page's bio is a `<section>` (page-bound
+  content, not independently distributable), not an `<article>`; each
+  article-list card is wrapped in a real `<article>` (it is a self-contained,
+  syndicatable summary); heading hierarchy stays one `<h1>` per page with
+  sibling `<h2>`s for each named block (newsletter box, contact, ask-ai,
+  article cards)
+- **`/llms.txt`**: served by a route (not a static file), built at request
+  time from `site.json` + the current article list — so it can never drift
+  out of sync with the real content the way a hand-maintained static file
+  would. Format follows the llms.txt convention: an H1 title, a one-line
+  blockquote summary, then linked sections for pages and articles (using
+  each article's `excerpt`). `Content-Type: text/plain; charset=utf-8`.
+- **`/robots.txt`**: a static file at `src/public/robots.txt` (served at the
+  site root automatically by the existing static middleware — no new route
+  needed). Explicitly allows both general crawlers and the named AI
+  crawlers (GPTBot, ChatGPT-User, ClaudeBot, anthropic-ai, PerplexityBot,
+  Google-Extended, CCBot) — the goal is discoverability, so this is an
+  allow-list statement, not a block-list. No `Sitemap:` line: that would
+  need an absolute domain, which isn't chosen yet, and no sitemap.xml was
+  asked for.
 
 ## File layout
 
@@ -136,9 +189,11 @@ personal-site/
       index.js         (home)
       articles.js       (list + single)
       subscribe.js       (POST /api/subscribe)
+      llms.js            (GET /llms.txt)
     services/
       convertkit.js
       articles.js         (reads/parses markdown from content/articles)
+      url.js               (canonicalUrl(req) helper for canonical links + JSON-LD)
     content/
       site.json
       articles/*.md
@@ -153,6 +208,7 @@ personal-site/
       css/ (tokens.css, styles.css)
       images/
       js/ (mobile nav toggle, contact.js, ask-ai.js)
+      robots.txt
   docs/superpowers/specs/2026-09-19-personal-site-design.md
 ```
 
