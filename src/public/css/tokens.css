@@ -1,0 +1,27 @@
+:root {
+  --gradient-bg: radial-gradient(circle at 18% 92%, rgba(139, 92, 246, 0.35), transparent 55%), radial-gradient(circle at 88% 8%, rgba(99, 102, 241, 0.25), transparent 50%), #140F28;
+  --color-foreground: #F5F3FF;
+  --color-foreground-soft: #D9D5EE;
+  --color-muted-foreground: #A9A3C9;
+  --color-card: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255, 255, 255, 0.10);
+  --color-muted: rgba(255, 255, 255, 0.08);
+  --color-accent: #8B5CF6;
+  --gradient-accent: linear-gradient(135deg, #6366F1, #8B5CF6);
+  --color-on-accent: #FFFFFF;
+  --color-ring: #A5B4FC;
+
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Space Grotesk', -apple-system, sans-serif;
+
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-5: 3rem;
+  --space-6: 4rem;
+
+  --radius: 14px;
+  --radius-sm: 8px;
+  --max-width: 1120px;
+}
