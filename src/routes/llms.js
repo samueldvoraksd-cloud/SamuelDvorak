@@ -20,6 +20,8 @@ router.get('/', (req, res) => {
     `- [Articles](${base}/articles): Writing on aviation and flight training`,
   ];
 
+  lines.push('', 'To get in touch with Samuel, use the "Email me" button in the Get in Touch section on the homepage.');
+
   if (articles.length > 0) {
     lines.push('', '## Articles', '');
     articles.forEach((article) => {

@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/styles.css">
   <% if (typeof structuredData !== 'undefined' && structuredData) { %>
-  <script type="application/ld+json"><%- JSON.stringify(structuredData) %></script>
+  <script type="application/ld+json"><%- JSON.stringify(structuredData).replace(/</g, '\\u003c') %></script>
   <% } %>
 </head>
 <body>

@@ -17,5 +17,9 @@
   "newsletter": {
     "name": "Beyond The Pattern",
     "description": "Weekly aviation articles, straight to your inbox."
+  },
+  "contact": {
+    "user": "samueldvoraksd",
+    "domain": "gmail.com"
   }
 }
