@@ -6,11 +6,16 @@ async function subscribe(email) {
     return { ok: false, reason: 'not_configured' };
   }
 
-  const response = await fetch(`https://api.convertkit.com/v3/forms/${formId}/subscribe`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ api_key: apiKey, email }),
-  });
+  let response;
+  try {
+    response = await fetch(`https://api.convertkit.com/v3/forms/${formId}/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: apiKey, email }),
+    });
+  } catch (err) {
+    return { ok: false, reason: 'request_failed' };
+  }
 
   if (!response.ok) {
     return { ok: false, reason: 'request_failed' };
