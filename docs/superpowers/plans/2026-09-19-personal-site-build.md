@@ -14,15 +14,17 @@
 ## Global Constraints
 
 - Stack is Node.js + Express + EJS, server-rendered, no frontend framework or CSS framework (spec: Tech stack)
-- Color tokens: primary `#0F172A`, accent `#0369A1`, background `#F8FAFC`, foreground `#020617` (light); dark-mode overrides via `prefers-color-scheme`, desaturated/lighter tonal variants, not raw inversion (spec: Visual design)
-- Typography: Public Sans (body/UI) + Fraunces (display/headings) (spec: Visual design)
-- Accessibility: 4.5:1 text contrast in both themes, visible focus rings, `prefers-reduced-motion` respected, interactive targets ≥44px (spec: Visual design)
+- **Visual design is Bento Indigo Glow — dark glass, dark-only (no light mode, no `prefers-color-scheme` branching).** Body background is a layered gradient: `radial-gradient(circle at 18% 92%, rgba(139,92,246,0.35), transparent 55%), radial-gradient(circle at 88% 8%, rgba(99,102,241,0.25), transparent 50%), #140F28`. Tiles: `background: rgba(255,255,255,0.05)`, `border: 1px solid rgba(255,255,255,0.10)`, `border-radius: 14px`, `backdrop-filter: blur(16px)`. Text: `--color-foreground: #F5F3FF`, `--color-foreground-soft: #D9D5EE`, `--color-muted-foreground: #A9A3C9`. Every filled CTA (Subscribe, Email me, Ask-AI icon buttons, contact tile background) uses `--gradient-accent: linear-gradient(135deg, #6366F1, #8B5CF6)`; `--color-accent: #8B5CF6` is the solid form for links/focus. Supersedes the earlier navy/sky-blue palette (spec: Visual design, 2026-09-19)
+- Typography: **Space Grotesk** (display/headings) + **Inter** (body/UI) — replaces the earlier Fraunces + Public Sans pairing (spec: Visual design, 2026-09-19)
+- Layout is a **bento grid**: hero tile (full width) → bio tile (full width — the bio is the full four-paragraph story) → newsletter tile + contact tile side by side → ask-ai tile (full width); stacks to one column below 768px (spec: Visual design, 2026-09-19)
+- Accessibility: 4.5:1 text contrast against the dark background (single theme), visible focus rings, `prefers-reduced-motion` respected, interactive targets ≥44px (spec: Visual design)
 - Responsive breakpoints: 375/768/1024/1440 (spec: Visual design)
 - No automated test suite — every task is verified with manual `curl`/`npm run dev` checks, not test files (spec: Testing / non-goals — this is an explicit, approved decision, not an oversight)
 - Newsletter form is a plain HTML POST (no client JS required) and must degrade gracefully (clear "temporarily unavailable" message, no crash) when ConvertKit env vars are unset (spec: Newsletter integration)
 - Contact email must never appear as a single string in server-rendered HTML — split into `data-user`/`data-domain` attributes, joined client-side only (content brief: Contact)
 - Nav is exactly Home, Articles, Contact for v1 — no Courses/Podcast/Book Notes (spec: Non-goals)
-- The contact "Email me" control lives inside the newsletter box (`#contact`), not as a separate section — the nav's `/#contact` link targets that same element (design iteration, 2026-09-19)
+- The contact "Email me" control is its own bento tile (`#contact`), separate from the newsletter tile — the nav's `/#contact` link targets it directly (design iteration, 2026-09-19 — supersedes the earlier "contact inside the newsletter box" decision)
+- `site.bio` is the full four-paragraph story (not the earlier condensed three-paragraph version) — same text as the `mechanic-to-pilot` article body. **This duplication is a flagged open question (spec: Content model), not yet resolved** — check with Samuel before Task 5 writes the article file
 - Every page passes `pageDescription` (falling back to `site.siteDescription`) and, where applicable, `canonicalUrl` and `structuredData` (JSON-LD) into `partials/head.ejs`; 404 responses additionally pass `noindex: true` (spec: AI & search discoverability)
 - The "Ask AI about me" buttons are icon buttons showing each provider's real mark (inlined SVG, sourced from Simple Icons), not text labels (spec: Ask AI about me)
 
@@ -177,9 +179,10 @@ git commit -m "Scaffold Express + EJS server"
   "tagline": "Mechanic-turned-pilot, now teaching others to fly",
   "siteDescription": "Samuel Dvorak is a flight instructor and former aircraft mechanic teaching private, instrument, and commercial students at Brazos Valley Flight Services.",
   "bio": [
-    "I didn't grow up dreaming about airplanes. I grew up taking things apart to see how they worked, mostly car engines on an old Honda Civic I never loved. When I found out airplane mechanic school existed, I figured wrenching on planes had to beat wrenching on cars. I was right, and it pulled me into aviation for good.",
-    "I earned my Airframe and Powerplant certifications and started fixing trainer aircraft at a flight school. Then, after a maintenance job on a Diamond DA-42, my boss, also a pilot, took me along on the test flight. On that flight, I stopped wanting to fix airplanes and started wanting to fly them.",
-    "I moved from Georgia to Texas for a mechanic-to-pilot internship, earned my ratings up through flight instructor, instrument flight instructor, and multi-engine flight instructor, and did line maintenance for a regional carrier at Bush Intercontinental along the way. Today I teach private, instrument, and commercial students at Brazos Valley Flight Services, and I want each of them to fall for flying the way I did that day in the DA-42."
+    "I started at a Part 147 aviation maintenance school, learning to maintain, repair, and inspect aircraft. Growing up, planes never interested me. I liked figuring things out, and I spent hours under the hood of an old Honda Civic, but cars never grabbed me either. Then I found out airplane mechanic school existed, and working on planes sounded a lot cooler than working on cars. That decision pulled me into aviation for good.",
+    "I graduated with my Airframe and Powerplant certifications and took a job at a flight school, wrenching on old trainer aircraft. One day, after I finished maintenance on a Diamond DA-42, my boss, who was also a pilot, took me along on the test flight. On that flight, I stopped wanting to fix airplanes and started wanting to fly them.",
+    "I moved from Georgia to Texas for a fully sponsored mechanic-to-pilot internship, trading flight school maintenance work for my private, instrument, and commercial ratings. I didn't know a single person in Texas when I packed my truck and left, but the deal was too good to pass up: fix airplanes by day, fly them the rest of the time, and walk away with a commercial certificate without paying for it out of pocket. After earning my commercial, I took a job with a regional airline under contract to United, doing line maintenance at Bush Intercontinental and learning how complex, multi-crew aircraft work under the skin. I kept adding ratings in my off time: commercial multi-engine, flight instructor, instrument flight instructor, and multi-engine flight instructor. Every rating I earned put me one step closer to the airlines, the goal I'd had since that DA-42 flight.",
+    "Then I got the job I'd been chasing since that DA-42 flight: teaching, at Brazos Valley Flight Services, where I still work today. I teach private, instrument, and commercial students now, and I want each of them to fall for flying the way I did on that test flight."
   ],
   "nav": [
     { "label": "Home", "href": "/" },
@@ -195,23 +198,27 @@ git commit -m "Scaffold Express + EJS server"
 
 - [ ] **Step 2: Create `src/public/css/tokens.css`**
 
+This design is dark-only (Visual design spec, 2026-09-19) — no
+`prefers-color-scheme` branching. The body background is a layered
+gradient, not a flat color, so it's a token of its own (`--gradient-bg`)
+rather than `--color-background`.
+
 ```css
 :root {
-  --color-primary: #0F172A;
-  --color-on-primary: #FFFFFF;
-  --color-secondary: #334155;
-  --color-accent: #0369A1;
+  --gradient-bg: radial-gradient(circle at 18% 92%, rgba(139, 92, 246, 0.35), transparent 55%), radial-gradient(circle at 88% 8%, rgba(99, 102, 241, 0.25), transparent 50%), #140F28;
+  --color-foreground: #F5F3FF;
+  --color-foreground-soft: #D9D5EE;
+  --color-muted-foreground: #A9A3C9;
+  --color-card: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255, 255, 255, 0.10);
+  --color-muted: rgba(255, 255, 255, 0.08);
+  --color-accent: #8B5CF6;
+  --gradient-accent: linear-gradient(135deg, #6366F1, #8B5CF6);
   --color-on-accent: #FFFFFF;
-  --color-background: #F8FAFC;
-  --color-foreground: #020617;
-  --color-card: #FFFFFF;
-  --color-muted: #E8ECF1;
-  --color-muted-foreground: #475569;
-  --color-border: #E2E8F0;
-  --color-ring: #0F172A;
+  --color-ring: #A5B4FC;
 
-  --font-body: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Space Grotesk', -apple-system, sans-serif;
 
   --space-1: 0.5rem;
   --space-2: 1rem;
@@ -220,36 +227,25 @@ git commit -m "Scaffold Express + EJS server"
   --space-5: 3rem;
   --space-6: 4rem;
 
-  --radius: 8px;
+  --radius: 14px;
+  --radius-sm: 8px;
   --max-width: 1120px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-primary: #E2E8F0;
-    --color-on-primary: #0F172A;
-    --color-secondary: #CBD5E1;
-    --color-accent: #38BDF8;
-    --color-on-accent: #0F172A;
-    --color-background: #0B1120;
-    --color-foreground: #F1F5F9;
-    --color-card: #131B2E;
-    --color-muted: #1E293B;
-    --color-muted-foreground: #94A3B8;
-    --color-border: #1E293B;
-    --color-ring: #38BDF8;
-  }
 }
 ```
 
 - [ ] **Step 3: Create `src/public/css/styles.css`**
+
+This is the complete stylesheet — every component the site needs,
+including the bento tiles, the ask-ai block, and the articles pages.
+Later tasks add markup that references these classes; none of them
+need to touch `styles.css` again.
 
 ```css
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: var(--color-background);
+  background: var(--gradient-bg);
   color: var(--color-foreground);
   font-family: var(--font-body);
   font-size: 16px;
@@ -283,7 +279,7 @@ input:focus-visible {
   position: absolute;
   left: -9999px;
   top: 0;
-  background: var(--color-accent);
+  background: var(--gradient-accent);
   color: var(--color-on-accent);
   padding: var(--space-1) var(--space-2);
   z-index: 100;
@@ -310,7 +306,7 @@ input:focus-visible {
 .site-header__brand {
   font-family: var(--font-display);
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-foreground);
   text-decoration: none;
 }
@@ -324,7 +320,7 @@ input:focus-visible {
 }
 
 .site-nav a {
-  color: var(--color-secondary);
+  color: var(--color-muted-foreground);
   text-decoration: none;
   font-weight: 500;
   padding: var(--space-1) 0;
@@ -335,51 +331,71 @@ input:focus-visible {
   color: var(--color-accent);
 }
 
-.hero {
-  display: grid;
-  grid-template-columns: 160px 1fr;
-  gap: var(--space-4);
-  align-items: center;
-  padding: var(--space-5) 0 var(--space-4);
+.tile {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-.hero__photo img {
-  width: 100%;
-  height: auto;
-  border-radius: var(--radius);
+.hero-tile {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  margin: var(--space-4) 0 var(--space-3);
+}
+
+.hero-tile__photo img {
+  width: 88px;
+  height: 88px;
+  border-radius: var(--radius-sm);
   display: block;
 }
 
-.hero h1 {
-  font-size: 2rem;
+.hero-tile h1 {
+  font-size: 1.5rem;
   margin-bottom: var(--space-1);
 }
 
 .tagline {
-  font-size: 1.125rem;
-  color: var(--color-secondary);
+  font-size: 1rem;
+  color: var(--color-muted-foreground);
 }
 
-.content-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: var(--space-4);
-  align-items: start;
-  padding-bottom: var(--space-5);
+.bio-tile {
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
-.bio p {
+.bio-tile__label {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 var(--space-2);
+}
+
+.bio-tile p {
   max-width: 68ch;
+  color: var(--color-foreground-soft);
 }
 
-.newsletter-box {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+.two-col-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.newsletter-tile {
   padding: var(--space-3);
 }
 
-.newsletter-box h2 {
+.newsletter-tile h2 {
   font-size: 1.1rem;
 }
 
@@ -393,24 +409,27 @@ input:focus-visible {
 .newsletter-form label {
   font-size: 0.875rem;
   font-weight: 500;
+  color: var(--color-muted-foreground);
 }
 
 .newsletter-form input {
   padding: var(--space-1);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   font-size: 1rem;
   min-height: 44px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-foreground);
 }
 
 .newsletter-form button {
   padding: var(--space-1) var(--space-2);
   min-height: 44px;
-  background: var(--color-accent);
+  background: var(--gradient-accent);
   color: var(--color-on-accent);
   border: none;
-  border-radius: var(--radius);
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -418,39 +437,111 @@ input:focus-visible {
 
 .form-message {
   padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
 }
 
 .form-message--success {
-  background: #DCFCE7;
-  color: #14532D;
+  background: rgba(34, 197, 94, 0.15);
+  color: #86EFAC;
 }
 
 .form-message--error {
-  background: #FEE2E2;
-  color: #7F1D1D;
+  background: rgba(239, 68, 68, 0.15);
+  color: #FCA5A5;
 }
 
-.contact {
-  padding: var(--space-4) 0 var(--space-5);
-  border-top: 1px solid var(--color-border);
-}
-
-.button {
-  display: inline-block;
-  padding: var(--space-1) var(--space-3);
-  min-height: 44px;
-  line-height: 1.8rem;
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  text-decoration: none;
+.contact-tile {
+  background: var(--gradient-accent);
   border-radius: var(--radius);
-  font-weight: 600;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+.contact-tile h2 {
+  color: #FFFFFF;
+  font-size: 1.1rem;
+}
+
+.contact-tile p {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.contact-tile__cta {
+  display: inline-block;
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  min-height: 44px;
+  line-height: 1.6rem;
+  text-decoration: none;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.button:hover { opacity: 0.9; }
+.contact-tile__cta:hover { background: rgba(255, 255, 255, 0.28); }
+
+.ask-ai-tile {
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.ask-ai-tile h2 {
+  font-size: 1rem;
+  margin-bottom: var(--space-1);
+}
+
+.ask-ai-tile__hint {
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground);
+  margin-bottom: var(--space-2);
+}
+
+.ask-ai__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.ask-ai__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.ask-ai__btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--gradient-accent);
+  color: var(--color-on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ask-ai__btn:hover { opacity: 0.9; }
+
+.ask-ai__label {
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground);
+}
+
+.ask-ai__status {
+  margin-top: var(--space-2);
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground);
+  min-height: 1.2em;
+}
 
 .articles-list ul {
   list-style: none;
@@ -465,6 +556,8 @@ input:focus-visible {
   border-radius: var(--radius);
   padding: var(--space-3);
   background: var(--color-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .article-card a {
@@ -496,7 +589,10 @@ input:focus-visible {
   margin-bottom: var(--space-3);
 }
 
-.article-detail__body p { margin-bottom: var(--space-2); }
+.article-detail__body p {
+  margin-bottom: var(--space-2);
+  color: var(--color-foreground-soft);
+}
 
 .not-found {
   padding: var(--space-6) 0;
@@ -515,15 +611,14 @@ input:focus-visible {
 }
 
 @media (max-width: 768px) {
-  .hero {
-    grid-template-columns: 1fr;
+  .hero-tile {
+    flex-direction: column;
     text-align: center;
-    justify-items: center;
   }
 
-  .hero__photo img { width: 160px; }
-
-  .content-grid { grid-template-columns: 1fr; }
+  .two-col-row {
+    grid-template-columns: 1fr;
+  }
 }
 ```
 
@@ -555,7 +650,7 @@ module.exports = { canonicalUrl };
   <% } %>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/styles.css">
   <% if (typeof structuredData !== 'undefined' && structuredData) { %>
@@ -670,24 +765,23 @@ git commit -m "Add design tokens, stylesheet, shared partials, and AI/SEO meta w
 
 ---
 
-## Task 3: Full home page — hero, bio, newsletter box + contact
+## Task 3: Full home page — bento grid (hero, bio, newsletter tile, contact tile)
 
 **Files:**
-- Create: `src/views/partials/newsletter-box.ejs`
+- Create: `src/views/partials/newsletter-tile.ejs`
 - Create: `src/public/images/samuel-placeholder.svg`
 - Create: `src/public/js/contact.js`
 - Modify: `src/views/index.ejs`
 - Modify: `src/views/partials/foot.ejs`
-- Modify: `src/public/css/styles.css`
 
 **Interfaces:**
-- Consumes: `site.json` shape from Task 2 (`site.bio`, `site.newsletter`); `subscribeStatus` local (optional, set by Task 4's route — `newsletter-box.ejs` must handle it being `undefined`)
-- Produces: `#contact-email-link` element with `data-user`/`data-domain` attributes, wired up by `public/js/contact.js` on `DOMContentLoaded`. The contact control lives inside `newsletter-box.ejs`, whose root `<aside>` carries `id="contact"` — that's what the nav's `/#contact` link (site.json, Task 2) scrolls to.
+- Consumes: `site.json` shape from Task 2 (`site.bio` — now 4 paragraphs, `site.newsletter`); `subscribeStatus` local (optional, set by Task 4's route — `newsletter-tile.ejs` must handle it being `undefined`); every CSS class used here (`.hero-tile`, `.bio-tile`, `.two-col-row`, `.newsletter-tile`, `.contact-tile`, `.tile`) is already defined in Task 2's `styles.css` — this task adds markup only, no CSS changes
+- Produces: `#contact-email-link` element with `data-user`/`data-domain` attributes, wired up by `public/js/contact.js` on `DOMContentLoaded`. The contact control is its own tile in `index.ejs` (not inside `newsletter-tile.ejs` — that changed in this design iteration), carrying `id="contact"` — that's what the nav's `/#contact` link (site.json, Task 2) scrolls to.
 
-- [ ] **Step 1: Create `src/views/partials/newsletter-box.ejs`**
+- [ ] **Step 1: Create `src/views/partials/newsletter-tile.ejs`**
 
 ```html
-<aside class="newsletter-box" id="contact" aria-labelledby="newsletter-heading">
+<aside class="newsletter-tile tile" aria-labelledby="newsletter-heading">
   <h2 id="newsletter-heading"><%= site.newsletter.name %></h2>
   <p><%= site.newsletter.description %></p>
   <% if (typeof subscribeStatus !== 'undefined' && subscribeStatus === 'success') { %>
@@ -702,7 +796,6 @@ git commit -m "Add design tokens, stylesheet, shared partials, and AI/SEO meta w
     <input type="email" id="newsletter-email" name="email" required autocomplete="email" placeholder="you@example.com">
     <button type="submit">Subscribe</button>
   </form>
-  <a id="contact-email-link" class="button newsletter-box__contact" href="#" data-user="samueldvoraksd" data-domain="gmail.com">Email me</a>
 </aside>
 ```
 
@@ -710,8 +803,8 @@ git commit -m "Add design tokens, stylesheet, shared partials, and AI/SEO meta w
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480" role="img" aria-label="Placeholder for Samuel's photo">
-  <rect width="480" height="480" fill="#E2E8F0"/>
-  <text x="240" y="240" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="20" fill="#475569">Add your photo here</text>
+  <rect width="480" height="480" fill="#2A2350"/>
+  <text x="240" y="240" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="20" fill="#A9A3C9">Add your photo here</text>
 </svg>
 ```
 
@@ -729,28 +822,35 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 ```
 
-- [ ] **Step 4: Rewrite `src/views/index.ejs` with the full home page**
+- [ ] **Step 4: Rewrite `src/views/index.ejs` with the full bento home page**
 
 ```html
 <%- include('partials/head', { site: site, pageTitle: 'Home', pageDescription: pageDescription, canonicalUrl: canonicalUrl, structuredData: structuredData, active: 'home' }) %>
 
-<section class="hero">
-  <div class="hero__photo">
-    <img src="/images/samuel-placeholder.svg" alt="Samuel Dvorak" width="480" height="480">
+<section class="hero-tile tile">
+  <div class="hero-tile__photo">
+    <img src="/images/samuel-placeholder.svg" alt="Samuel Dvorak" width="88" height="88">
   </div>
-  <div class="hero__intro">
+  <div>
     <h1><%= site.siteTitle %></h1>
     <p class="tagline"><%= site.tagline %></p>
   </div>
 </section>
 
-<div class="content-grid">
-  <section class="bio" aria-label="About Samuel">
-    <% site.bio.forEach(function(paragraph) { %>
-      <p><%= paragraph %></p>
-    <% }); %>
-  </section>
-  <%- include('partials/newsletter-box', { site: site, subscribeStatus: typeof subscribeStatus !== 'undefined' ? subscribeStatus : undefined }) %>
+<section class="bio-tile tile" aria-label="About Samuel">
+  <p class="bio-tile__label">About</p>
+  <% site.bio.forEach(function(paragraph) { %>
+    <p><%= paragraph %></p>
+  <% }); %>
+</section>
+
+<div class="two-col-row">
+  <%- include('partials/newsletter-tile', { site: site, subscribeStatus: typeof subscribeStatus !== 'undefined' ? subscribeStatus : undefined }) %>
+  <aside class="contact-tile" id="contact" aria-labelledby="contact-heading">
+    <h2 id="contact-heading">Get in touch</h2>
+    <p>Questions about flight training, or just want to say hi?</p>
+    <a id="contact-email-link" class="contact-tile__cta" href="#" data-user="samueldvoraksd" data-domain="gmail.com">Email me</a>
+  </aside>
 </div>
 
 <%- include('partials/foot', { site: site }) %>
@@ -770,23 +870,11 @@ document.addEventListener('DOMContentLoaded', function () {
 </html>
 ```
 
-- [ ] **Step 6: Modify `src/public/css/styles.css` — append the contact-link style**
-
-```css
-.newsletter-box__contact {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  text-align: center;
-  margin-top: var(--space-2);
-}
-```
-
-- [ ] **Step 7: Verify the full home page renders and the email is not exposed as raw text**
+- [ ] **Step 6: Verify the full home page renders and the email is not exposed as raw text**
 
 Run: `npm run dev &`, wait ~1s, then:
 ```bash
-curl -s http://localhost:3000/ | grep -q "I didn't grow up dreaming about airplanes"
+curl -s http://localhost:3000/ | grep -q "I started at a Part 147 aviation maintenance school"
 curl -s http://localhost:3000/ | grep -q "Beyond The Pattern"
 curl -s http://localhost:3000/ | grep -q 'id="contact"'
 curl -s http://localhost:3000/ | grep -q ">Email me<"
@@ -796,11 +884,11 @@ Expected: first four greps match; the last command prints `0` (the full address 
 
 Stop the server afterward.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add src/views/partials/newsletter-box.ejs src/public/images src/public/js src/views/index.ejs src/views/partials/foot.ejs src/public/css/styles.css
-git commit -m "Build full home page: hero, bio, newsletter box with contact"
+git add src/views/partials/newsletter-tile.ejs src/public/images src/public/js src/views/index.ejs src/views/partials/foot.ejs
+git commit -m "Build full bento home page: hero, bio, newsletter and contact tiles"
 ```
 
 ---
@@ -814,7 +902,7 @@ git commit -m "Build full home page: hero, bio, newsletter box with contact"
 - Modify: `src/routes/index.js`
 
 **Interfaces:**
-- Consumes: `process.env.CONVERTKIT_API_KEY`, `process.env.CONVERTKIT_FORM_ID`; `subscribeStatus` contract from Task 3's `newsletter-box.ejs` (`'success' | 'unavailable' | 'error' | undefined`)
+- Consumes: `process.env.CONVERTKIT_API_KEY`, `process.env.CONVERTKIT_FORM_ID`; `subscribeStatus` contract from Task 3's `newsletter-tile.ejs` (`'success' | 'unavailable' | 'error' | undefined`)
 - Produces: `convertkit.subscribe(email)` returning `Promise<{ ok: true } | { ok: false, reason: 'not_configured' | 'request_failed' }>`, used only by `src/routes/subscribe.js`
 
 - [ ] **Step 1: Create `src/services/convertkit.js`**
@@ -957,6 +1045,17 @@ git commit -m "Wire newsletter signup to ConvertKit with graceful degradation"
 ---
 
 ## Task 5: Articles — service, routes, views, and the first post
+
+**⚠ Before writing Step 1: check the open duplicate-content question with
+Samuel first** (spec: Content model, 2026-09-19). `site.bio` (Task 2) is
+now the same four-paragraph text as this task's `mechanic-to-pilot.md`
+body — home and this article would be word-for-word identical. Confirm
+with Samuel whether to (a) rewrite this article's body to something
+different from the home bio, (b) skip this article for launch and ship
+Articles empty, or (c) ship the duplication anyway for now. The content
+below assumes (c) — ship as originally written — only because that's the
+lowest-risk default if this task runs before the question is answered;
+change it if Samuel picks (a) or (b).
 
 **Files:**
 - Create: `src/services/articles.js`
@@ -1237,10 +1336,9 @@ git commit -m "Add catch-all 404 handler"
 - Create: `src/views/partials/ask-ai.ejs`
 - Create: `src/public/js/ask-ai.js`
 - Modify: `src/views/partials/foot.ejs`
-- Modify: `src/public/css/styles.css`
 
 **Interfaces:**
-- Consumes: nothing new (pure client-side; no server route)
+- Consumes: `.ask-ai-tile`, `.ask-ai-tile__hint`, `.ask-ai__buttons`, `.ask-ai__item`, `.ask-ai__btn`, `.ask-ai__label`, `.ask-ai__status` — already defined in Task 2's `styles.css`, no CSS changes needed here
 - Produces: nothing consumed by later tasks — this is the last content task before manual QA
 
 - [ ] **Step 1: Create `src/views/partials/ask-ai.ejs`**
@@ -1248,9 +1346,9 @@ git commit -m "Add catch-all 404 handler"
 Each button is an icon button showing that provider's real mark — inlined SVG (sourced from [Simple Icons](https://github.com/simple-icons/simple-icons), MIT-licensed), not a runtime fetch. The icon is `aria-hidden` since the adjacent visible label and the button's own `aria-label` already name it.
 
 ```html
-<section class="ask-ai" aria-labelledby="ask-ai-heading">
+<section class="ask-ai-tile tile" aria-labelledby="ask-ai-heading">
   <h2 id="ask-ai-heading">Ask AI about me</h2>
-  <p>Curious about my background? Ask an AI assistant directly — I'll copy the prompt to your clipboard too, in case it doesn't carry over.</p>
+  <p class="ask-ai-tile__hint">Curious about my background? Ask an AI assistant directly — I'll copy the prompt to your clipboard too, in case it doesn't carry over.</p>
   <div class="ask-ai__buttons">
     <div class="ask-ai__item">
       <button type="button" class="ask-ai__btn" data-provider="chatgpt" aria-label="Ask ChatGPT about Samuel">
@@ -1279,7 +1377,7 @@ Each button is an icon button showing that provider's real mark — inlined SVG 
 
 ```js
 document.addEventListener('DOMContentLoaded', function () {
-  var container = document.querySelector('.ask-ai');
+  var container = document.querySelector('.ask-ai-tile');
   if (!container) return;
 
   var status = container.querySelector('[data-ask-ai-status]');
@@ -1332,57 +1430,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 ```
 
-- [ ] **Step 3: Modify `src/public/css/styles.css` — append the ask-ai styles**
-
-```css
-.ask-ai {
-  padding: var(--space-4) 0 var(--space-5);
-  border-top: 1px solid var(--color-border);
-}
-
-.ask-ai__buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-}
-
-.ask-ai__item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.ask-ai__btn {
-  width: 44px;
-  height: 44px;
-  border: none;
-  border-radius: var(--radius);
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.ask-ai__btn:hover { opacity: 0.9; }
-
-.ask-ai__label {
-  font-size: 0.75rem;
-  color: var(--color-muted-foreground);
-}
-
-.ask-ai__status {
-  margin-top: var(--space-2);
-  font-size: 0.875rem;
-  color: var(--color-muted-foreground);
-  min-height: 1.2em;
-}
-```
-
-- [ ] **Step 4: Modify `src/views/partials/foot.ejs` to include the block and its script on every page**
+- [ ] **Step 3: Modify `src/views/partials/foot.ejs` to include the block and its script on every page**
 
 ```html
   </main>
@@ -1398,7 +1446,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </html>
 ```
 
-- [ ] **Step 5: Verify the block renders on every page type and the prompt has no raw email/instruction text**
+- [ ] **Step 4: Verify the block renders on every page type and the prompt has no raw email/instruction text**
 
 Run: `npm run dev &`, wait ~1s, then:
 ```bash
@@ -1416,10 +1464,10 @@ Expected: every grep matches except the last one, which must **not** match
 
 Stop the server afterward.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add src/views/partials/ask-ai.ejs src/public/js/ask-ai.js src/public/css/styles.css src/views/partials/foot.ejs
+git add src/views/partials/ask-ai.ejs src/public/js/ask-ai.js src/views/partials/foot.ejs
 git commit -m "Add 'Ask AI about me' block to every page"
 ```
 
@@ -1565,14 +1613,14 @@ git commit -m "Add /llms.txt and /robots.txt for AI/search discoverability"
 This task needs the Browser pane and is not a fit for a subagent — the orchestrating session runs it directly against `npm run dev` using `preview_start`.
 
 - [ ] Start the dev server via `preview_start` and open `/`
-- [ ] Confirm nav (Home/Articles/Contact), hero, bio, and the newsletter box render as expected
-- [ ] Confirm the "Email me" button sits directly under "Subscribe" inside the newsletter box, and that clicking the nav's "Contact" link scrolls to that same box
+- [ ] Confirm the dark glass background (gradient glow, not a flat color) renders, and nav (Home/Articles/Contact), hero tile, bio tile (full four-paragraph story), newsletter tile, and contact tile all render as glass tiles as expected
+- [ ] Confirm the contact tile is its own tile next to the newsletter tile (not inside it), and that clicking the nav's "Contact" link scrolls to the contact tile
 - [ ] Click "Email me" and confirm the resulting `href` is `mailto:samueldvoraksd@gmail.com` (constructed by `contact.js`, not present in the initial HTML)
 - [ ] Submit the newsletter form (no ConvertKit credentials yet) and confirm the "Signup isn't connected yet" message appears without a server error
 - [ ] Visit `/articles`, confirm the one post is listed; click into it and confirm the full body renders
 - [ ] Visit a nonexistent path and confirm the 404 page renders
-- [ ] `resize_window` to 375px width: confirm no horizontal scroll, hero stacks to one column, nav wraps cleanly
-- [ ] `resize_window` with `colorScheme: "dark"`: confirm text stays readable against the dark background (no light-mode colors leaking through)
+- [ ] `resize_window` to 375px width: confirm no horizontal scroll, the hero tile stacks to one column, the newsletter/contact two-tile row stacks to one column, nav wraps cleanly
+- [ ] `resize_window` with `colorScheme: "light"`, then again with `"dark"`: confirm the page looks identical both times — this design is dark-only (no `prefers-color-scheme` branching in the CSS), so an OS light-mode preference must not leak any light-theme colors in
 - [ ] Reset `resize_window` to `preset: "desktop"` when done
 - [ ] Confirm the "Ask AI about me" block appears at the bottom of `/`, `/articles`, an article page, and the 404 page, and that each button shows that provider's real icon (not text)
 - [ ] Click each of the three buttons and confirm: a new tab opens to the right provider with the prompt visible in the input (or, if a provider ignores the `?q=` param, confirm the status line says the prompt was copied) — read the clipboard back via `javascript_tool` (`await navigator.clipboard.readText()`) to confirm the copied text matches the expected prompt
