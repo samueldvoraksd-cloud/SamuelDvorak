@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Task 9 is a manual browser QA pass and must be run by the orchestrating session directly (it needs the Browser pane), not delegated to a subagent.
 
-**Goal:** Build Samuel's personal bio site — a Node.js/Express server rendering an About/home page, an articles section (launching with one post), a newsletter signup wired to ConvertKit with graceful degradation, and a lightly-obfuscated contact link.
+**Goal:** Build Samuel's personal bio site — a Node.js/Express server rendering an About/home page, an articles section (launching empty, ready for posts later), a newsletter signup wired to ConvertKit with graceful degradation, and a lightly-obfuscated contact link.
 
 **Architecture:** Express + EJS, server-rendered, no frontend framework. Content lives in files (`src/content/site.json` for site copy, `src/content/articles/*.md` for posts) rather than a database or CMS. Raw EJS partials (`head.ejs`/`foot.ejs`) stand in for a layout engine — no `express-ejs-layouts` dependency, consistent with the spec's "keep dependencies minimal" stance.
 
@@ -24,7 +24,7 @@
 - Contact email must never appear as a single string in server-rendered HTML — split into `data-user`/`data-domain` attributes, joined client-side only (content brief: Contact)
 - Nav is exactly Home, Articles, Contact for v1 — no Courses/Podcast/Book Notes (spec: Non-goals)
 - The contact "Email me" control is its own bento tile (`#contact`), separate from the newsletter tile — the nav's `/#contact` link targets it directly (design iteration, 2026-09-19 — supersedes the earlier "contact inside the newsletter box" decision)
-- `site.bio` is the full four-paragraph story (not the earlier condensed three-paragraph version) — same text as the `mechanic-to-pilot` article body. **This duplication is a flagged open question (spec: Content model), not yet resolved** — check with Samuel before Task 5 writes the article file
+- `site.bio` is the full four-paragraph story (not the earlier condensed three-paragraph version). Articles launches empty — Samuel decided against also shipping that story as a duplicate `mechanic-to-pilot` article (spec: Content model, resolved 2026-09-19)
 - Every page passes `pageDescription` (falling back to `site.siteDescription`) and, where applicable, `canonicalUrl` and `structuredData` (JSON-LD) into `partials/head.ejs`; 404 responses additionally pass `noindex: true` (spec: AI & search discoverability)
 - The "Ask AI about me" buttons are icon buttons showing each provider's real mark (inlined SVG, sourced from Simple Icons), not text labels (spec: Ask AI about me)
 
@@ -350,6 +350,8 @@ input:focus-visible {
 .hero-tile__photo img {
   width: 88px;
   height: 88px;
+  object-fit: cover;
+  object-position: 50% 20%;
   border-radius: var(--radius-sm);
   display: block;
 }
@@ -769,7 +771,10 @@ git commit -m "Add design tokens, stylesheet, shared partials, and AI/SEO meta w
 
 **Files:**
 - Create: `src/views/partials/newsletter-tile.ejs`
-- Create: `src/public/images/samuel-placeholder.svg`
+- Already provided: `src/public/images/samuel.webp` — Samuel's real photo
+  (cockpit selfie, headset, Brazos Valley Flight Services polo), added
+  2026-09-19 ahead of this task. Nothing to create in Step 2; `index.ejs`
+  (Step 4) references this file directly.
 - Create: `src/public/js/contact.js`
 - Modify: `src/views/index.ejs`
 - Modify: `src/views/partials/foot.ejs`
@@ -799,16 +804,13 @@ git commit -m "Add design tokens, stylesheet, shared partials, and AI/SEO meta w
 </aside>
 ```
 
-- [ ] **Step 2: Create `src/public/images/samuel-placeholder.svg`**
+- [ ] **Step 2: Verify the real photo is present**
 
-```svg
-<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480" role="img" aria-label="Placeholder for Samuel's photo">
-  <rect width="480" height="480" fill="#2A2350"/>
-  <text x="240" y="240" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="20" fill="#A9A3C9">Add your photo here</text>
-</svg>
+```bash
+test -f src/public/images/samuel.webp && echo "found"
 ```
-
-Note for Samuel: replace this by adding a real photo file and changing the `src` in `index.ejs` (Step 4 below) from `/images/samuel-placeholder.svg` to your file's path.
+Expected: prints `found`. (No creation step — this file was added directly
+to the repo ahead of this task; see Files above.)
 
 - [ ] **Step 3: Create `src/public/js/contact.js`**
 
@@ -829,7 +831,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <section class="hero-tile tile">
   <div class="hero-tile__photo">
-    <img src="/images/samuel-placeholder.svg" alt="Samuel Dvorak" width="88" height="88">
+    <img src="/images/samuel.webp" alt="Samuel Dvorak in the cockpit, headset on" width="88" height="88">
   </div>
   <div>
     <h1><%= site.siteTitle %></h1>
@@ -878,9 +880,10 @@ curl -s http://localhost:3000/ | grep -q "I started at a Part 147 aviation maint
 curl -s http://localhost:3000/ | grep -q "Beyond The Pattern"
 curl -s http://localhost:3000/ | grep -q 'id="contact"'
 curl -s http://localhost:3000/ | grep -q ">Email me<"
+curl -s http://localhost:3000/ | grep -q 'src="/images/samuel.webp"'
 curl -s http://localhost:3000/ | grep -c "samueldvoraksd@gmail.com"
 ```
-Expected: first four greps match; the last command prints `0` (the full address never appears as one string — it's split into `data-user="samueldvoraksd"` and `data-domain="gmail.com"`).
+Expected: first five greps match; the last command prints `0` (the full address never appears as one string — it's split into `data-user="samueldvoraksd"` and `data-domain="gmail.com"`).
 
 Stop the server afterward.
 
@@ -1044,48 +1047,30 @@ git commit -m "Wire newsletter signup to ConvertKit with graceful degradation"
 
 ---
 
-## Task 5: Articles — service, routes, views, and the first post
+## Task 5: Articles — service, routes, views (launches empty)
 
-**⚠ Before writing Step 1: check the open duplicate-content question with
-Samuel first** (spec: Content model, 2026-09-19). `site.bio` (Task 2) is
-now the same four-paragraph text as this task's `mechanic-to-pilot.md`
-body — home and this article would be word-for-word identical. Confirm
-with Samuel whether to (a) rewrite this article's body to something
-different from the home bio, (b) skip this article for launch and ship
-Articles empty, or (c) ship the duplication anyway for now. The content
-below assumes (c) — ship as originally written — only because that's the
-lowest-risk default if this task runs before the question is answered;
-change it if Samuel picks (a) or (b).
+The `mechanic-to-pilot` story now lives fully on the home page (`site.bio`,
+Task 2) — Samuel decided against also shipping it as a duplicate article
+(spec: Content model, resolved 2026-09-19). Articles launches with zero
+posts; the infrastructure is still built so Samuel can drop in real `.md`
+files later without touching code.
 
 **Files:**
 - Create: `src/services/articles.js`
 - Create: `src/routes/articles.js`
 - Create: `src/views/articles-list.ejs`
 - Create: `src/views/article.ejs`
-- Create: `src/content/articles/mechanic-to-pilot.md`
+- Create: `src/content/articles/.gitkeep`
 - Modify: `server.js`
 
 **Interfaces:**
 - Consumes: `canonicalUrl(req)` from `src/services/url.js` (Task 2)
-- Produces: `articlesService.getAll()` returning `Array<{ slug, title, date, excerpt }>` sorted newest-first; `articlesService.getBySlug(slug)` returning `{ slug, title, date, excerpt, html } | null`. Both used only by `src/routes/articles.js`, which Task 8 also imports for `/llms.txt`.
+- Produces: `articlesService.getAll()` returning `Array<{ slug, title, date, excerpt }>` sorted newest-first (empty array today); `articlesService.getBySlug(slug)` returning `{ slug, title, date, excerpt, html } | null`. Both used only by `src/routes/articles.js`, which Task 8 also imports for `/llms.txt`.
 
-- [ ] **Step 1: Create `src/content/articles/mechanic-to-pilot.md`**
+- [ ] **Step 1: Create `src/content/articles/.gitkeep`** (empty file — keeps the directory in git so it exists for Samuel to drop `.md` files into later)
 
-```markdown
----
-title: "The Mechanic Who Became a Pilot"
-slug: mechanic-to-pilot
-date: "2026-09-19"
-excerpt: "How one test flight in a Diamond DA-42 flipped what I wanted, from fixing airplanes to flying them, and set me on the path to the airlines."
----
+```
 
-I started at a Part 147 aviation maintenance school, learning to maintain, repair, and inspect aircraft. Growing up, planes never interested me. I liked figuring things out, and I spent hours under the hood of an old Honda Civic, but cars never grabbed me either. Then I found out airplane mechanic school existed, and working on planes sounded a lot cooler than working on cars. That decision pulled me into aviation for good.
-
-I graduated with my Airframe and Powerplant certifications and took a job at a flight school, wrenching on old trainer aircraft. One day, after I finished maintenance on a Diamond DA-42, my boss, who was also a pilot, took me along on the test flight. On that flight, I stopped wanting to fix airplanes and started wanting to fly them.
-
-I moved from Georgia to Texas for a fully sponsored mechanic-to-pilot internship, trading flight school maintenance work for my private, instrument, and commercial ratings. I didn't know a single person in Texas when I packed my truck and left, but the deal was too good to pass up: fix airplanes by day, fly them the rest of the time, and walk away with a commercial certificate without paying for it out of pocket. After earning my commercial, I took a job with a regional airline under contract to United, doing line maintenance at Bush Intercontinental and learning how complex, multi-crew aircraft work under the skin. I kept adding ratings in my off time: commercial multi-engine, flight instructor, instrument flight instructor, and multi-engine flight instructor. Every rating I earned put me one step closer to the airlines, the goal I'd had since that DA-42 flight.
-
-Then I got the job I'd been chasing since that DA-42 flight: teaching, at Brazos Valley Flight Services, where I still work today. I teach private, instrument, and commercial students now, and I want each of them to fall for flying the way I did on that test flight.
 ```
 
 - [ ] **Step 2: Create `src/services/articles.js`**
@@ -1099,6 +1084,7 @@ const { marked } = require('marked');
 const ARTICLES_DIR = path.join(__dirname, '..', 'content', 'articles');
 
 function loadAll() {
+  if (!fs.existsSync(ARTICLES_DIR)) return [];
   const files = fs.readdirSync(ARTICLES_DIR).filter((f) => f.endsWith('.md'));
   return files
     .map((file) => {
@@ -1245,17 +1231,18 @@ app.listen(PORT, () => {
 });
 ```
 
-- [ ] **Step 7: Verify the article list, article detail, and missing-slug 404**
+- [ ] **Step 7: Verify the empty-state article list and missing-slug 404**
 
 Run: `npm run dev &`, wait ~1s, then:
 ```bash
-curl -s http://localhost:3000/articles | grep -q "The Mechanic Who Became a Pilot"
-curl -s http://localhost:3000/articles/mechanic-to-pilot | grep -q "Bush Intercontinental"
-curl -s http://localhost:3000/articles/mechanic-to-pilot | grep -q '"@type":"Article"'
-curl -s http://localhost:3000/articles/mechanic-to-pilot | grep -q '<meta name="description" content="How one test flight'
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/articles/does-not-exist
+curl -s http://localhost:3000/articles | grep -q "Nothing published yet"
+curl -s http://localhost:3000/articles | grep -q "Writing on aviation, flight training"
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/articles/anything
+curl -s http://localhost:3000/articles/anything | grep -q "Page not found"
 ```
-Expected: first four greps match; the last command prints `404`.
+Expected: first two greps match (empty-state message and the list page's
+own meta description); the third command prints `404`; the fourth grep
+matches — with zero articles, every slug 404s.
 
 Stop the server afterward.
 
@@ -1263,7 +1250,7 @@ Stop the server afterward.
 
 ```bash
 git add src/content/articles src/services/articles.js src/routes/articles.js src/views/articles-list.ejs src/views/article.ejs server.js
-git commit -m "Add articles section with first post"
+git commit -m "Add articles section (launches empty, ready for posts later)"
 ```
 
 ---
@@ -1452,7 +1439,6 @@ Run: `npm run dev &`, wait ~1s, then:
 ```bash
 curl -s http://localhost:3000/ | grep -q "Ask AI about me"
 curl -s http://localhost:3000/articles | grep -q "Ask AI about me"
-curl -s http://localhost:3000/articles/mechanic-to-pilot | grep -q "Ask AI about me"
 curl -s http://localhost:3000/this-page-does-not-exist | grep -q "Ask AI about me"
 curl -s http://localhost:3000/ | grep -q 'data-provider="chatgpt"'
 curl -s http://localhost:3000/ | grep -q 'data-provider="claude"'
@@ -1589,13 +1575,16 @@ app.listen(PORT, () => {
 Run: `npm run dev &`, wait ~1s, then:
 ```bash
 curl -s http://localhost:3000/llms.txt | grep -q "# Samuel Dvorak"
+curl -s http://localhost:3000/llms.txt | grep -q "## Pages"
 curl -s http://localhost:3000/llms.txt | grep -q "## Articles"
-curl -s http://localhost:3000/llms.txt | grep -q "The Mechanic Who Became a Pilot"
 curl -s -i http://localhost:3000/llms.txt | grep -qi "content-type: text/plain"
 curl -s http://localhost:3000/robots.txt | grep -q "User-agent: GPTBot"
 curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/robots.txt
 ```
-Expected: all greps match; the last command prints `200`.
+Expected: every grep matches except the third one (`## Articles`), which
+must **not** match (exit code 1) — with zero articles published, the
+route's `if (articles.length > 0)` branch correctly skips that section
+entirely. The last command prints `200`.
 
 Stop the server afterward.
 

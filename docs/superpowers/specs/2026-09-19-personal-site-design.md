@@ -82,7 +82,7 @@ see the dark-only note below.
 | Route | Purpose |
 |---|---|
 | `GET /` | Home/About — bento grid: hero, bio (full story), newsletter tile, contact tile, ask-ai tile |
-| `GET /articles` | List of published articles (may be empty/1 post at launch) |
+| `GET /articles` | List of published articles (launches empty — see Content model) |
 | `GET /articles/:slug` | Single article page, rendered from Markdown |
 | `POST /api/subscribe` | Newsletter signup → ConvertKit; redirects back to `/` with a success/error query flag, no client JS required |
 | `GET *` (404) | Simple not-found page |
@@ -104,17 +104,20 @@ contact tile's `id="contact"` — not a route).
   Brazos Valley today), not the shorter three-paragraph condensed version
   explored earlier. The bento layout's bio tile was widened to full-width
   specifically to hold this.
-  - **Open question:** this text is identical to the `mechanic-to-pilot`
-    article's body (Content model, Task 5 of the plan). Shipping both as-is
-    means the home page and that article carry duplicate content, which
-    dilutes canonical/SEO signal for both (works against the AI &
-    discoverability goals below). Options: (a) keep the article, but slim it
-    to something that isn't a word-for-word repeat of the home bio; (b) drop
-    the `mechanic-to-pilot` article for launch and ship Articles empty,
-    since the story now lives fully on the home page; (c) ship the
-    duplication for launch and resolve it later. **Not resolved yet** —
-    flagging for Samuel before Task 5 of the plan runs, since Task 5 is
-    where the article file gets written.
+  - **Resolved, 2026-09-19:** the duplicate-content question (this text vs.
+    a `mechanic-to-pilot` article body) is settled — Samuel chose to drop
+    that article rather than ship a word-for-word duplicate. Articles
+    launches with zero posts; the routes/views/service still get built
+    (Task 5) so Samuel can add real posts later without touching code.
+- **Profile photo — final, 2026-09-19.** A real photo (Samuel in the
+  cockpit, headset on, Brazos Valley Flight Services polo) replaces the
+  gray placeholder box in the hero tile. Saved at
+  `src/public/images/samuel.webp`. The hero tile's photo slot is a small
+  square avatar, but the source photo is a tall portrait selfie, so the
+  `<img>` needs `object-fit: cover` with `object-position` biased toward
+  the top (his face/headset sits in the upper half of the frame) rather
+  than a pre-cropped square asset — lets the browser do the cropping
+  responsively instead of baking in one fixed crop.
 
 ## Newsletter integration (ConvertKit)
 
@@ -242,7 +245,7 @@ personal-site/
       404.ejs
     public/
       css/ (tokens.css, styles.css)
-      images/
+      images/ (samuel.webp — real profile photo)
       js/ (mobile nav toggle, contact.js, ask-ai.js)
       robots.txt
   docs/superpowers/specs/2026-09-19-personal-site-design.md
@@ -259,8 +262,9 @@ design's dark-only note).
 ## Open items (not blocking build start)
 
 1. ConvertKit Form ID + API key — Samuel to provide once account exists.
-2. Bio copy — being fine-tuned separately (stop-slop pass) before final
-   text lands in `site.json`.
-3. Remaining site copy (tagline, nav labels, contact blurb, newsletter
-   pitch, one placeholder article) — gathered via a short interview,
-   tracked separately from this spec.
+
+Resolved since this spec was first written: bio copy (final, full
+four-paragraph version — Content model), remaining site copy (tagline, nav
+labels, contact blurb, newsletter pitch — content-brief.md), the
+duplicate-content/article question (dropped — Content model), and the
+profile photo (real photo in place — Content model).
