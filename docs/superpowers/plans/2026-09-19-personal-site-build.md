@@ -27,6 +27,7 @@
 - `site.bio` is the full four-paragraph story (not the earlier condensed three-paragraph version). Articles launches empty — Samuel decided against also shipping that story as a duplicate `mechanic-to-pilot` article (spec: Content model, resolved 2026-09-19)
 - Every page passes `pageDescription` (falling back to `site.siteDescription`) and, where applicable, `canonicalUrl` and `structuredData` (JSON-LD) into `partials/head.ejs`; 404 responses additionally pass `noindex: true` (spec: AI & search discoverability)
 - The "Ask AI about me" buttons are icon buttons showing each provider's real mark (inlined SVG, sourced from Simple Icons), not text labels (spec: Ask AI about me)
+- The header brand link uses `site.navBrand` ("Aviation Professional"), not `site.siteTitle` — every other identity-bearing spot (page-title suffix, footer copyright, hero `<h1>`, JSON-LD `Person.name`) keeps using `site.siteTitle` ("Samuel Dvorak"), so the site's own structured data still correctly names the person (spec: Content model, 2026-09-19)
 
 ---
 
@@ -169,13 +170,14 @@ git commit -m "Scaffold Express + EJS server"
 
 **Interfaces:**
 - Consumes: Express app/static middleware from Task 1 (serves `src/public` at `/`)
-- Produces: `site.json` shape `{ siteTitle, tagline, siteDescription, bio: string[], nav: [{label, href}], newsletter: {name, description} }`, required by every later view. `src/services/url.js` exports `canonicalUrl(req)` returning the page's absolute URL, used by every route from here on. `partials/head.ejs` expects locals `{ site, pageTitle?, pageDescription?, canonicalUrl?, structuredData?, noindex?, active? }`; `partials/foot.ejs` expects `{ site }`. `views/404.ejs` expects `{ site, pageDescription?, noindex? }` — later tasks (articles 404, catch-all 404) render this same view.
+- Produces: `site.json` shape `{ siteTitle, navBrand, tagline, siteDescription, bio: string[], nav: [{label, href}], newsletter: {name, description} }`, required by every later view. `navBrand` ("Aviation Professional") is presentation-only, used solely by the header brand link — every identity-bearing use (page-title suffix, footer copyright, JSON-LD `Person.name`) uses `siteTitle` ("Samuel Dvorak") instead. `src/services/url.js` exports `canonicalUrl(req)` returning the page's absolute URL, used by every route from here on. `partials/head.ejs` expects locals `{ site, pageTitle?, pageDescription?, canonicalUrl?, structuredData?, noindex?, active? }`; `partials/foot.ejs` expects `{ site }`. `views/404.ejs` expects `{ site, pageDescription?, noindex? }` — later tasks (articles 404, catch-all 404) render this same view.
 
 - [ ] **Step 1: Create `src/content/site.json` with the final approved copy**
 
 ```json
 {
   "siteTitle": "Samuel Dvorak",
+  "navBrand": "Aviation Professional",
   "tagline": "Mechanic-turned-pilot, now teaching others to fly",
   "siteDescription": "Samuel Dvorak is a flight instructor and former aircraft mechanic teaching private, instrument, and commercial students at Brazos Valley Flight Services.",
   "bio": [
@@ -663,7 +665,7 @@ module.exports = { canonicalUrl };
   <a class="skip-link" href="#main">Skip to main content</a>
   <header class="site-header">
     <div class="container site-header__inner">
-      <a class="site-header__brand" href="/"><%= site.siteTitle %></a>
+      <a class="site-header__brand" href="/"><%= site.navBrand %></a>
       <nav class="site-nav" aria-label="Primary">
         <ul>
           <% site.nav.forEach(function(item) { %>
@@ -1605,6 +1607,7 @@ This task needs the Browser pane and is not a fit for a subagent — the orchest
 
 - [ ] Start the dev server via `preview_start` and open `/`
 - [ ] Confirm the dark glass background (gradient glow, not a flat color) renders, and nav (Home/Articles/Contact), hero tile, bio tile (full four-paragraph story), newsletter tile, and contact tile all render as glass tiles as expected
+- [ ] Confirm the header brand link reads "Aviation Professional" (not "Samuel Dvorak"), while the hero tile's name, the footer copyright, and (view source) the JSON-LD `Person.name` all still say "Samuel Dvorak"
 - [ ] Confirm the contact tile is its own tile next to the newsletter tile (not inside it), and that clicking the nav's "Contact" link scrolls to the contact tile
 - [ ] Click "Email me" and confirm the resulting `href` is `mailto:samueldvoraksd@gmail.com` (constructed by `contact.js`, not present in the initial HTML)
 - [ ] Submit the newsletter form (no ConvertKit credentials yet) and confirm the "Signup isn't connected yet" message appears without a server error

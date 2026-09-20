@@ -96,6 +96,17 @@ contact tile's `id="contact"` — not a route).
   text (rich — paragraphs), contact email, social links, newsletter box
   copy. Single source of truth for anything editable that isn't a full
   article.
+- **Header brand text — final, 2026-09-19.** The nav bar's brand label (top
+  of every page) reads **"Aviation Professional"**, not Samuel's name. This
+  is a distinct field, `site.navBrand`, separate from `site.siteTitle`
+  ("Samuel Dvorak") — `siteTitle` still drives the hero's actual name
+  heading, the `<title>` suffix, the footer copyright, and the
+  `schema.org/Person` JSON-LD `name` field. Splitting these matters: using
+  "Aviation Professional" everywhere `siteTitle` is used today would make
+  the site's own structured data claim the person's name is "Aviation
+  Professional," undermining the AI/SEO work below, which depends on
+  consistently associating "Samuel Dvorak" with this site. The nav label
+  is presentation only; the canonical identity fields are untouched.
 - `src/content/articles/*.md` — one file per post. Frontmatter: `title`,
   `slug`, `date`, `excerpt`. Body is Markdown.
 - **Bio copy — final, 2026-09-19.** `site.bio` is now the full four-paragraph
