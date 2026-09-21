@@ -19,9 +19,14 @@
   "linksDescription": "YouTube videos I point students to for maneuvers, checkride prep, and systems knowledge — worth your time outside the airplane.",
   "links": [
     {
-      "title": "How to Tie Down an Airplane",
+      "title": "How to tie down an airplane",
       "description": "Here is my preferred knot for tying down an aircraft. Other types of knots are acceptable but I find this to be the best technique.",
       "url": "https://youtu.be/i6rOTHmGals"
+    },
+    {
+      "title": "How to create a nav log for cross country flights",
+      "description": "Cross country nav log creation based on Cessna 172 POH.",
+      "url": "https://youtu.be/Ydvev6B7IaY"
     }
   ]
 }
