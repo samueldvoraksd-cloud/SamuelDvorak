@@ -178,13 +178,6 @@ input:focus-visible {
 
 .contact-tile__cta:hover { opacity: 0.9; }
 
-.contact-tile__status {
-  margin-top: var(--space-1);
-  font-size: 0.85rem;
-  color: var(--color-muted-foreground);
-  min-height: 1.2em;
-}
-
 .contact-dialog {
   background: #1B1533;
   color: var(--color-foreground);
@@ -283,13 +276,6 @@ input:focus-visible {
 
 .contact-form__submit:hover { opacity: 0.9; }
 .contact-form__submit:disabled { opacity: 0.6; cursor: not-allowed; }
-
-.contact-form__alt {
-  margin-top: var(--space-3);
-  font-size: 0.85rem;
-  color: var(--color-muted-foreground);
-  text-align: center;
-}
 
 .ask-ai-tile {
   padding: var(--space-3);

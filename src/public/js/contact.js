@@ -1,21 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-  var link = document.getElementById('contact-email-link');
-  if (link) {
-    var user = link.getAttribute('data-user');
-    var domain = link.getAttribute('data-domain');
-    var email = user + '@' + domain;
-    link.setAttribute('href', 'mailto:' + email);
-
-    var status = document.getElementById('contact-status');
-    link.addEventListener('click', function () {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(email).then(function () {
-          if (status) status.textContent = 'Copied ' + email + ' to your clipboard, in case your email app didn\'t open.';
-        }).catch(function () {});
-      }
-    });
-  }
-
   var dialog = document.getElementById('contact-dialog');
   var openBtn = document.getElementById('open-contact-dialog');
   var closeBtn = document.getElementById('close-contact-dialog');
@@ -66,15 +49,15 @@ document.addEventListener('DOMContentLoaded', function () {
           form.reset();
           setTimeout(function () { dialog.close(); }, 1800);
         } else if (result.body.reason === 'not_configured') {
-          formMessage.textContent = 'The contact form isn\'t connected yet — try the email link below instead.';
+          formMessage.textContent = 'The contact form isn\'t connected yet — please check back soon.';
           formMessage.className = 'contact-form__message contact-form__message--error';
         } else {
-          formMessage.textContent = 'Something went wrong. Try again, or use the email link below.';
+          formMessage.textContent = 'Something went wrong. Please try again in a bit.';
           formMessage.className = 'contact-form__message contact-form__message--error';
         }
       })
       .catch(function () {
-        formMessage.textContent = 'Something went wrong. Try again, or use the email link below.';
+        formMessage.textContent = 'Something went wrong. Please try again in a bit.';
         formMessage.className = 'contact-form__message contact-form__message--error';
       })
       .finally(function () {
