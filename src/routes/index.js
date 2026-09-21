@@ -4,15 +4,6 @@ const site = require('../content/site.json');
 const { canonicalUrl } = require('../services/url');
 
 router.get('/', (req, res) => {
-  let subscribeStatus;
-  if (req.query.subscribed === '1') {
-    subscribeStatus = 'success';
-  } else if (req.query.subscribe_error === 'unavailable') {
-    subscribeStatus = 'unavailable';
-  } else if (req.query.subscribe_error) {
-    subscribeStatus = 'error';
-  }
-
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Person',
@@ -25,7 +16,6 @@ router.get('/', (req, res) => {
 
   res.render('index', {
     site,
-    subscribeStatus,
     pageDescription: site.siteDescription,
     canonicalUrl: canonicalUrl(req),
     structuredData,

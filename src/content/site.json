@@ -12,12 +12,9 @@
   "nav": [
     { "label": "Home", "href": "/" },
     { "label": "Articles", "href": "/articles" },
+    { "label": "Resources", "href": "/resources" },
     { "label": "Contact", "href": "/#contact" }
   ],
-  "newsletter": {
-    "name": "Beyond The Pattern",
-    "description": "Weekly aviation articles, straight to your inbox."
-  },
   "contact": {
     "user": "samueldvoraksd",
     "domain": "gmail.com"

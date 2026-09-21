@@ -1,0 +1,36 @@
+<%- include('partials/head', { site: site, pageTitle: 'Resources', pageDescription: pageDescription, canonicalUrl: canonicalUrl, active: active }) %>
+
+<h1>Resources</h1>
+
+<section class="resource-section tile" aria-labelledby="documents-heading">
+  <h2 id="documents-heading">Documents</h2>
+  <% if (resources.documents.length === 0) { %>
+    <p class="empty-state">Nothing here yet — check back soon.</p>
+  <% } else { %>
+    <ul class="resource-grid">
+      <% resources.documents.forEach(function(doc) { %>
+        <li class="resource-card">
+          <h3><%= doc.title %></h3>
+          <p><%= doc.description %></p>
+          <a class="resource-card__cta" href="<%= doc.file %>" download>Download</a>
+        </li>
+      <% }); %>
+    </ul>
+  <% } %>
+</section>
+
+<section class="resource-section tile" aria-labelledby="links-heading">
+  <h2 id="links-heading">Links</h2>
+  <p class="resource-section__hint"><%= resources.linksDescription %></p>
+  <% if (resources.links.length === 0) { %>
+    <p class="empty-state">Nothing here yet — check back soon.</p>
+  <% } else { %>
+    <ul class="resource-links">
+      <% resources.links.forEach(function(link) { %>
+        <li><a href="<%= link.url %>" target="_blank" rel="noopener noreferrer"><%= link.title %></a><% if (link.description) { %> — <span><%= link.description %></span><% } %></li>
+      <% }); %>
+    </ul>
+  <% } %>
+</section>
+
+<%- include('partials/foot', { site: site }) %>

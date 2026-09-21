@@ -1,0 +1,21 @@
+{
+  "documents": [
+    {
+      "title": "Private Pilot Oral Exam Study Guide",
+      "description": "A question bank covering the topics examiners ask about most on the private pilot checkride oral exam.",
+      "file": "/documents/private-pilot-oral-question-bank.pdf"
+    },
+    {
+      "title": "Instrument Rating Oral Exam Study Guide",
+      "description": "A question bank covering the topics examiners ask about most on the instrument rating checkride oral exam.",
+      "file": "/documents/instrument-rating-oral-question-bank.pdf"
+    },
+    {
+      "title": "Commercial Pilot Oral Exam Study Guide",
+      "description": "A question bank covering the topics examiners ask about most on the commercial pilot checkride oral exam.",
+      "file": "/documents/commercial-pilot-oral-question-bank.pdf"
+    }
+  ],
+  "linksDescription": "YouTube videos I point students to for maneuvers, checkride prep, and systems knowledge — worth your time outside the airplane.",
+  "links": []
+}

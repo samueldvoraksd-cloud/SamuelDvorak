@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const indexRouter = require('./src/routes/index');
 const articlesRouter = require('./src/routes/articles');
-const subscribeRouter = require('./src/routes/subscribe');
+const resourcesRouter = require('./src/routes/resources');
 const llmsRouter = require('./src/routes/llms');
 const site = require('./src/content/site.json');
 
@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use('/', indexRouter);
 app.use('/articles', articlesRouter);
-app.use('/api/subscribe', subscribeRouter);
+app.use('/resources', resourcesRouter);
 app.use('/llms.txt', llmsRouter);
 
 app.use((req, res) => {
