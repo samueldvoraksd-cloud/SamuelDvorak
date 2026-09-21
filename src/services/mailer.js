@@ -1,28 +1,30 @@
-const nodemailer = require('nodemailer');
-
-function getTransport() {
-  const user = process.env.CONTACT_EMAIL_USER;
-  const pass = process.env.CONTACT_EMAIL_APP_PASSWORD;
-  if (!user || !pass) return null;
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user, pass },
-  });
-}
+const RESEND_API_URL = 'https://api.resend.com/emails';
 
 async function sendContactMessage({ name, email, message }) {
-  const transport = getTransport();
-  if (!transport) return { ok: false, reason: 'not_configured' };
+  const apiKey = process.env.RESEND_API_KEY;
+  const to = process.env.CONTACT_TO_EMAIL;
+  if (!apiKey || !to) return { ok: false, reason: 'not_configured' };
 
-  const to = process.env.CONTACT_EMAIL_USER;
   try {
-    await transport.sendMail({
-      from: `"${name} (via site contact form)" <${process.env.CONTACT_EMAIL_USER}>`,
-      to,
-      replyTo: email,
-      subject: `New message from ${name}`,
-      text: message,
+    const res = await fetch(RESEND_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Personal Site <onboarding@resend.dev>',
+        to,
+        reply_to: email,
+        subject: `New message from ${name}`,
+        text: message,
+      }),
     });
+
+    if (!res.ok) {
+      console.error('Resend error', res.status, await res.text());
+      return { ok: false, reason: 'send_failed' };
+    }
     return { ok: true };
   } catch (err) {
     console.error(err);
