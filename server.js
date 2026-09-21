@@ -4,6 +4,7 @@ const path = require('path');
 const indexRouter = require('./src/routes/index');
 const articlesRouter = require('./src/routes/articles');
 const resourcesRouter = require('./src/routes/resources');
+const contactRouter = require('./src/routes/contact');
 const llmsRouter = require('./src/routes/llms');
 const site = require('./src/content/site.json');
 
@@ -15,10 +16,12 @@ app.set('views', path.join(__dirname, 'src', 'views'));
 app.set('trust proxy', 1);
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 app.use('/', indexRouter);
 app.use('/articles', articlesRouter);
 app.use('/resources', resourcesRouter);
+app.use('/api/contact', contactRouter);
 app.use('/llms.txt', llmsRouter);
 
 app.use((req, res) => {
