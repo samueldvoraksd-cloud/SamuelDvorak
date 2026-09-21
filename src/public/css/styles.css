@@ -178,6 +178,13 @@ input:focus-visible {
 
 .contact-tile__cta:hover { opacity: 0.9; }
 
+.contact-tile__status {
+  margin-top: var(--space-1);
+  font-size: 0.85rem;
+  color: var(--color-muted-foreground);
+  min-height: 1.2em;
+}
+
 .ask-ai-tile {
   padding: var(--space-3);
   margin-bottom: var(--space-4);
