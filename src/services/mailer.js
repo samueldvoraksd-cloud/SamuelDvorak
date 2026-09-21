@@ -13,7 +13,7 @@ async function sendContactMessage({ name, email, message }) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Personal Site <onboarding@resend.dev>',
+        from: 'Samuel Dvorak <onboarding@resend.dev>',
         to,
         reply_to: email,
         subject: `New message from ${name}`,
