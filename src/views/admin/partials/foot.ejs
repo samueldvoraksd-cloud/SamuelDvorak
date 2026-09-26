@@ -1,3 +1,58 @@
   </div>
+  <script>
+    function autosize(el) {
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+    document.querySelectorAll('.admin-autosize').forEach(function (el) {
+      autosize(el);
+      el.addEventListener('input', function () { autosize(el); });
+    });
+
+    document.querySelectorAll('.admin-dropzone').forEach(function (zone) {
+      const input = zone.querySelector('input[type="file"]');
+      const label = zone.querySelector('.admin-dropzone__label');
+      if (!input) return;
+
+      // zone is a <label> wrapping the file input, so clicking it already
+      // opens the picker natively — only drag/drop needs wiring up here.
+      input.addEventListener('change', function () {
+        if (input.files[0] && label) label.textContent = input.files[0].name;
+      });
+
+      ['dragover', 'dragenter'].forEach(function (evt) {
+        zone.addEventListener(evt, function (e) {
+          e.preventDefault();
+          zone.classList.add('is-dragover');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(function (evt) {
+        zone.addEventListener(evt, function (e) {
+          e.preventDefault();
+          zone.classList.remove('is-dragover');
+        });
+      });
+
+      zone.addEventListener('drop', function (e) {
+        if (e.dataTransfer.files[0]) {
+          input.files = e.dataTransfer.files;
+          if (label) label.textContent = e.dataTransfer.files[0].name;
+        }
+      });
+    });
+
+    document.body.addEventListener('click', function (event) {
+      if (!event.target.classList.contains('js-clear-file')) return;
+      const row = event.target.closest('.admin-row');
+      if (!row) return;
+      const hiddenFile = row.querySelector('input[type="hidden"][name$="[file]"]');
+      if (hiddenFile) hiddenFile.value = '';
+      const currentLine = row.querySelector('[data-current-line]');
+      if (currentLine) currentLine.remove();
+      const dzLabel = row.querySelector('.admin-dropzone__label');
+      if (dzLabel) dzLabel.textContent = event.target.dataset.defaultLabel || 'Drag a file here or click to browse';
+    });
+  </script>
 </body>
 </html>

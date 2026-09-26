@@ -59,7 +59,13 @@ function save({ slug, title, date, excerpt, body }, originalSlug) {
   if (slug !== originalSlug && fs.existsSync(targetPath)) {
     throw new Error(`An article with the slug "${slug}" already exists.`);
   }
-  const fileContents = matter.stringify(`${body.trim()}\n`, { slug, title, date, excerpt });
+  const singleLine = (s) => String(s || '').replace(/\s+/g, ' ').trim();
+  const fileContents = matter.stringify(`${body.trim()}\n`, {
+    slug,
+    title: singleLine(title),
+    date,
+    excerpt: singleLine(excerpt),
+  });
   fs.writeFileSync(targetPath, fileContents, 'utf8');
   if (originalSlug && originalSlug !== slug) {
     const oldPath = filePathForSlug(originalSlug);

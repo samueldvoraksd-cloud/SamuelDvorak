@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
 const router = express.Router();
 const requireAuth = require('../middleware/requireAuth');
 const csrf = require('../services/csrf');
@@ -9,6 +10,27 @@ const articlesService = require('../services/articles');
 
 const SITE_JSON_PATH = path.join(__dirname, '..', 'content', 'site.json');
 const RESOURCES_JSON_PATH = path.join(__dirname, '..', 'content', 'resources.json');
+const DOCUMENTS_DIR = path.join(__dirname, '..', 'public', 'documents');
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      fs.mkdirSync(DOCUMENTS_DIR, { recursive: true });
+      cb(null, DOCUMENTS_DIR);
+    },
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      const base = path.basename(file.originalname, ext)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        .slice(0, 60) || 'document';
+      cb(null, `${base}-${Date.now()}${ext}`);
+    },
+  }),
+  fileFilter: (req, file, cb) => cb(null, file.mimetype === 'application/pdf'),
+  limits: { fileSize: 20 * 1024 * 1024 },
+});
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
@@ -57,6 +79,19 @@ function normalizeRows(rows, fields) {
       return clean;
     })
     .filter((row) => fields.some((field) => row[field]));
+}
+
+// Deletes any /documents/* file that was referenced before saving but isn't
+// referenced by any row after saving, so replaced/removed uploads don't
+// accumulate as orphaned files on disk.
+function cleanupOrphanedDocuments(previousDocs, newDocs) {
+  const before = new Set((previousDocs || []).map((d) => d.file).filter(Boolean));
+  const after = new Set((newDocs || []).map((d) => d.file).filter(Boolean));
+  before.forEach((file) => {
+    if (after.has(file) || !file.startsWith('/documents/')) return;
+    const abs = path.join(DOCUMENTS_DIR, path.basename(file));
+    try { fs.unlinkSync(abs); } catch (err) { /* best effort cleanup */ }
+  });
 }
 
 // --- Auth ---
@@ -164,15 +199,25 @@ router.get('/resources', requireAuth, (req, res) => {
   });
 });
 
-router.post('/resources', requireAuth, (req, res) => {
+router.post('/resources', requireAuth, upload.any(), (req, res) => {
   if (!csrf.verifyToken(req)) return res.status(403).send('Session expired, please go back and try again.');
   const { linksDescription, documents, links } = req.body || {};
 
+  // multer/append-field already parses `documents[N][field]` into a real
+  // nested array on req.body — just splice in any uploaded files by index.
+  (req.files || []).forEach((file) => {
+    const match = file.fieldname.match(/^documents\[(\d+)\]\[fileUpload\]$/);
+    if (!match || !documents || !documents[match[1]]) return;
+    documents[match[1]].file = `/documents/${file.filename}`;
+  });
+
+  const previous = readJsonFile(RESOURCES_JSON_PATH);
   const updated = {
     documents: normalizeRows(documents, ['title', 'description', 'file']),
     linksDescription: (linksDescription || '').trim(),
     links: normalizeRows(links, ['title', 'description', 'url']),
   };
+  cleanupOrphanedDocuments(previous.documents, updated.documents);
   writeJsonFile(RESOURCES_JSON_PATH, updated);
 
   res.render('admin/resources-edit', {

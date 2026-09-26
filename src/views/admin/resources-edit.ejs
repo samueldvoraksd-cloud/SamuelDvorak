@@ -4,11 +4,13 @@
   <p><a href="/admin">&larr; Back</a></p>
   <h1>Resources page content</h1>
 
+  <p class="admin-notice">Uploaded PDFs are saved to this server's disk. On Render's free tier, that disk doesn't survive a redeploy or a spin-down restart &mdash; if a document disappears after the site's been idle, re-upload it here.</p>
+
   <% if (saved) { %>
     <p class="admin-message admin-message--success">Saved.</p>
   <% } %>
 
-  <form method="post" action="/admin/resources" class="admin-form" id="resources-form">
+  <form method="post" action="/admin/resources" class="admin-form" id="resources-form" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
     <h2>Documents</h2>
@@ -17,11 +19,22 @@
         <div class="admin-row">
           <button type="button" class="admin-row__remove" aria-label="Remove document">&times;</button>
           <label>Title</label>
-          <input type="text" name="documents[<%= i %>][title]" value="<%= doc.title %>">
+          <textarea class="admin-autosize" rows="1" name="documents[<%= i %>][title]"><%= doc.title %></textarea>
           <label>Description</label>
-          <input type="text" name="documents[<%= i %>][description]" value="<%= doc.description %>">
-          <label>File path (e.g. /documents/example.pdf)</label>
-          <input type="text" name="documents[<%= i %>][file]" value="<%= doc.file %>">
+          <textarea class="admin-autosize" rows="1" name="documents[<%= i %>][description]"><%= doc.description %></textarea>
+          <label>PDF</label>
+          <input type="hidden" name="documents[<%= i %>][file]" value="<%= doc.file %>">
+          <% if (doc.file) { %>
+            <p class="admin-dropzone__current" data-current-line>
+              Current: <a href="<%= doc.file %>" target="_blank" rel="noopener"><%= doc.file.split('/').pop() %></a>
+              &mdash;
+              <button type="button" class="js-clear-file" data-default-label="Drag a PDF here or click to browse">Remove file</button>
+            </p>
+          <% } %>
+          <label class="admin-dropzone">
+            <input type="file" accept="application/pdf" name="documents[<%= i %>][fileUpload]">
+            <span class="admin-dropzone__label"><%= doc.file ? 'Drag a new PDF here to replace, or click to browse' : 'Drag a PDF here or click to browse' %></span>
+          </label>
         </div>
       <% }); %>
     </div>
@@ -29,18 +42,18 @@
 
     <h2>Links</h2>
     <label for="linksDescription">Links section blurb</label>
-    <input type="text" id="linksDescription" name="linksDescription" value="<%= linksDescription %>">
+    <textarea id="linksDescription" name="linksDescription" class="admin-autosize" rows="1"><%= linksDescription %></textarea>
 
     <div id="links-rows">
       <% links.forEach(function(link, i) { %>
         <div class="admin-row">
           <button type="button" class="admin-row__remove" aria-label="Remove link">&times;</button>
           <label>Title</label>
-          <input type="text" name="links[<%= i %>][title]" value="<%= link.title %>">
+          <textarea class="admin-autosize" rows="1" name="links[<%= i %>][title]"><%= link.title %></textarea>
           <label>URL</label>
           <input type="text" name="links[<%= i %>][url]" value="<%= link.url %>">
           <label>Description</label>
-          <input type="text" name="links[<%= i %>][description]" value="<%= link.description %>">
+          <textarea class="admin-autosize" rows="1" name="links[<%= i %>][description]"><%= link.description %></textarea>
         </div>
       <% }); %>
     </div>
@@ -54,11 +67,15 @@
   <div class="admin-row">
     <button type="button" class="admin-row__remove" aria-label="Remove document">&times;</button>
     <label>Title</label>
-    <input type="text" name="documents[__INDEX__][title]">
+    <textarea class="admin-autosize" rows="1" name="documents[__INDEX__][title]"></textarea>
     <label>Description</label>
-    <input type="text" name="documents[__INDEX__][description]">
-    <label>File path (e.g. /documents/example.pdf)</label>
-    <input type="text" name="documents[__INDEX__][file]">
+    <textarea class="admin-autosize" rows="1" name="documents[__INDEX__][description]"></textarea>
+    <label>PDF</label>
+    <input type="hidden" name="documents[__INDEX__][file]" value="">
+    <label class="admin-dropzone">
+      <input type="file" accept="application/pdf" name="documents[__INDEX__][fileUpload]">
+      <span class="admin-dropzone__label">Drag a PDF here or click to browse</span>
+    </label>
   </div>
 </template>
 
@@ -66,11 +83,11 @@
   <div class="admin-row">
     <button type="button" class="admin-row__remove" aria-label="Remove link">&times;</button>
     <label>Title</label>
-    <input type="text" name="links[__INDEX__][title]">
+    <textarea class="admin-autosize" rows="1" name="links[__INDEX__][title]"></textarea>
     <label>URL</label>
     <input type="text" name="links[__INDEX__][url]">
     <label>Description</label>
-    <input type="text" name="links[__INDEX__][description]">
+    <textarea class="admin-autosize" rows="1" name="links[__INDEX__][description]"></textarea>
   </div>
 </template>
 
@@ -84,7 +101,11 @@
       const html = template.innerHTML.replaceAll('__INDEX__', String(nextIndex++));
       const wrapper = document.createElement('div');
       wrapper.innerHTML = html.trim();
-      container.appendChild(wrapper.firstElementChild);
+      const row = wrapper.firstElementChild;
+      container.appendChild(row);
+      row.querySelectorAll('.admin-autosize').forEach(function (el) {
+        el.dispatchEvent(new Event('input'));
+      });
     }
 
     document.getElementById('add-document').addEventListener('click', function () {

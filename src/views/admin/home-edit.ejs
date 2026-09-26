@@ -21,7 +21,7 @@
     <input type="text" id="tagline" name="tagline" value="<%= form.tagline %>" required>
 
     <label for="siteDescription">Short description (used for search engines, not shown on the page)</label>
-    <textarea id="siteDescription" name="siteDescription" rows="2"><%= form.siteDescription %></textarea>
+    <textarea id="siteDescription" name="siteDescription" class="admin-autosize" rows="1"><%= form.siteDescription %></textarea>
 
     <label for="bioText">Bio (leave a blank line between paragraphs)</label>
     <textarea id="bioText" name="bioText" class="admin-form__body" rows="16"><%= form.bioText %></textarea>
