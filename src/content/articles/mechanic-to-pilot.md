@@ -1,7 +1,7 @@
 ---
 slug: mechanic-to-pilot
 title: The Mechanic Who Became a Pilot
-date: '2026-09-25'
+date: '2026-09-24'
 excerpt: >-
   How a Diamond DA-42 test flight turned an aircraft mechanic into a flight
   instructor.
