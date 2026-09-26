@@ -45,7 +45,7 @@ function clearAttempts(ip) {
 
 router.get('/login', (req, res) => {
   if (req.session.isAdmin) return res.redirect('/admin');
-  res.render('admin/login', { error: null, csrfToken: csrf.getToken(req) });
+  res.render('admin/login', { error: null, csrfToken: csrf.getToken(req, res) });
 });
 
 router.post('/login', (req, res) => {
@@ -54,12 +54,12 @@ router.post('/login', (req, res) => {
   if (isLockedOut(ip)) {
     return res.status(429).render('admin/login', {
       error: 'Too many failed attempts. Try again in a few minutes.',
-      csrfToken: csrf.getToken(req),
+      csrfToken: csrf.getToken(req, res),
     });
   }
 
   if (!csrf.verifyToken(req)) {
-    return res.status(403).render('admin/login', { error: 'Session expired, please try again.', csrfToken: csrf.getToken(req) });
+    return res.status(403).render('admin/login', { error: 'Session expired, please try again.', csrfToken: csrf.getToken(req, res) });
   }
 
   const { username, password } = req.body || {};
@@ -71,7 +71,7 @@ router.post('/login', (req, res) => {
 
   if (!validUsername || !validPassword) {
     recordFailedAttempt(ip);
-    return res.status(401).render('admin/login', { error: 'Incorrect username or password.', csrfToken: csrf.getToken(req) });
+    return res.status(401).render('admin/login', { error: 'Incorrect username or password.', csrfToken: csrf.getToken(req, res) });
   }
 
   clearAttempts(ip);
@@ -103,7 +103,7 @@ router.get('/home', requireAuth, (req, res) => {
     raw,
     error: null,
     saved: false,
-    csrfToken: csrf.getToken(req),
+    csrfToken: csrf.getToken(req, res),
   });
 });
 
@@ -120,7 +120,7 @@ router.post('/home', requireAuth, (req, res) => {
       raw: `${JSON.stringify(parsed, null, 2)}\n`,
       error: null,
       saved: true,
-      csrfToken: csrf.getToken(req),
+      csrfToken: csrf.getToken(req, res),
     });
   } catch (err) {
     res.status(400).render('admin/json-editor', {
@@ -130,7 +130,7 @@ router.post('/home', requireAuth, (req, res) => {
       raw,
       error: `Invalid JSON: ${err.message}`,
       saved: false,
-      csrfToken: csrf.getToken(req),
+      csrfToken: csrf.getToken(req, res),
     });
   }
 });
@@ -146,7 +146,7 @@ router.get('/resources', requireAuth, (req, res) => {
     raw,
     error: null,
     saved: false,
-    csrfToken: csrf.getToken(req),
+    csrfToken: csrf.getToken(req, res),
   });
 });
 
@@ -163,7 +163,7 @@ router.post('/resources', requireAuth, (req, res) => {
       raw: `${JSON.stringify(parsed, null, 2)}\n`,
       error: null,
       saved: true,
-      csrfToken: csrf.getToken(req),
+      csrfToken: csrf.getToken(req, res),
     });
   } catch (err) {
     res.status(400).render('admin/json-editor', {
@@ -173,7 +173,7 @@ router.post('/resources', requireAuth, (req, res) => {
       raw,
       error: `Invalid JSON: ${err.message}`,
       saved: false,
-      csrfToken: csrf.getToken(req),
+      csrfToken: csrf.getToken(req, res),
     });
   }
 });
@@ -181,7 +181,7 @@ router.post('/resources', requireAuth, (req, res) => {
 // --- Articles ---
 
 router.get('/articles', requireAuth, (req, res) => {
-  res.render('admin/articles-list', { articles: articlesService.getAll(), csrfToken: csrf.getToken(req) });
+  res.render('admin/articles-list', { articles: articlesService.getAll(), csrfToken: csrf.getToken(req, res) });
 });
 
 router.get('/articles/new', requireAuth, (req, res) => {
@@ -189,7 +189,7 @@ router.get('/articles/new', requireAuth, (req, res) => {
     mode: 'new',
     article: { slug: '', title: '', date: new Date().toISOString().slice(0, 10), excerpt: '', body: '' },
     error: null,
-    csrfToken: csrf.getToken(req),
+    csrfToken: csrf.getToken(req, res),
   });
 });
 
@@ -204,7 +204,7 @@ router.post('/articles/new', requireAuth, (req, res) => {
       mode: 'new',
       article: { slug, title, date, excerpt, body },
       error: err.message,
-      csrfToken: csrf.getToken(req),
+      csrfToken: csrf.getToken(req, res),
     });
   }
 });
@@ -212,7 +212,7 @@ router.post('/articles/new', requireAuth, (req, res) => {
 router.get('/articles/:slug/edit', requireAuth, (req, res) => {
   const article = articlesService.getRawBySlug(req.params.slug);
   if (!article) return res.status(404).send('Article not found.');
-  res.render('admin/article-form', { mode: 'edit', article, error: null, csrfToken: csrf.getToken(req) });
+  res.render('admin/article-form', { mode: 'edit', article, error: null, csrfToken: csrf.getToken(req, res) });
 });
 
 router.post('/articles/:slug/edit', requireAuth, (req, res) => {
@@ -227,7 +227,7 @@ router.post('/articles/:slug/edit', requireAuth, (req, res) => {
       mode: 'edit',
       article: { slug, title, date, excerpt, body },
       error: err.message,
-      csrfToken: csrf.getToken(req),
+      csrfToken: csrf.getToken(req, res),
     });
   }
 });

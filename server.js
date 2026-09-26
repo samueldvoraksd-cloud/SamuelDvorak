@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const indexRouter = require('./src/routes/index');
 const articlesRouter = require('./src/routes/articles');
@@ -23,6 +24,7 @@ app.set('trust proxy', 1);
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(cookieParser());
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-only-secret-change-me',
   resave: false,
