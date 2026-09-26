@@ -1,0 +1,105 @@
+<%- include('partials/head', { title: 'Resources page content' }) %>
+
+<div class="admin-card">
+  <p><a href="/admin">&larr; Back</a></p>
+  <h1>Resources page content</h1>
+
+  <% if (saved) { %>
+    <p class="admin-message admin-message--success">Saved.</p>
+  <% } %>
+
+  <form method="post" action="/admin/resources" class="admin-form" id="resources-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <h2>Documents</h2>
+    <div id="documents-rows">
+      <% documents.forEach(function(doc, i) { %>
+        <div class="admin-row">
+          <button type="button" class="admin-row__remove" aria-label="Remove document">&times;</button>
+          <label>Title</label>
+          <input type="text" name="documents[<%= i %>][title]" value="<%= doc.title %>">
+          <label>Description</label>
+          <input type="text" name="documents[<%= i %>][description]" value="<%= doc.description %>">
+          <label>File path (e.g. /documents/example.pdf)</label>
+          <input type="text" name="documents[<%= i %>][file]" value="<%= doc.file %>">
+        </div>
+      <% }); %>
+    </div>
+    <button type="button" class="admin-btn admin-btn--secondary" id="add-document">+ Add document</button>
+
+    <h2>Links</h2>
+    <label for="linksDescription">Links section blurb</label>
+    <input type="text" id="linksDescription" name="linksDescription" value="<%= linksDescription %>">
+
+    <div id="links-rows">
+      <% links.forEach(function(link, i) { %>
+        <div class="admin-row">
+          <button type="button" class="admin-row__remove" aria-label="Remove link">&times;</button>
+          <label>Title</label>
+          <input type="text" name="links[<%= i %>][title]" value="<%= link.title %>">
+          <label>URL</label>
+          <input type="text" name="links[<%= i %>][url]" value="<%= link.url %>">
+          <label>Description</label>
+          <input type="text" name="links[<%= i %>][description]" value="<%= link.description %>">
+        </div>
+      <% }); %>
+    </div>
+    <button type="button" class="admin-btn admin-btn--secondary" id="add-link">+ Add link</button>
+
+    <p><button type="submit" class="admin-btn">Save</button></p>
+  </form>
+</div>
+
+<template id="document-row-template">
+  <div class="admin-row">
+    <button type="button" class="admin-row__remove" aria-label="Remove document">&times;</button>
+    <label>Title</label>
+    <input type="text" name="documents[__INDEX__][title]">
+    <label>Description</label>
+    <input type="text" name="documents[__INDEX__][description]">
+    <label>File path (e.g. /documents/example.pdf)</label>
+    <input type="text" name="documents[__INDEX__][file]">
+  </div>
+</template>
+
+<template id="link-row-template">
+  <div class="admin-row">
+    <button type="button" class="admin-row__remove" aria-label="Remove link">&times;</button>
+    <label>Title</label>
+    <input type="text" name="links[__INDEX__][title]">
+    <label>URL</label>
+    <input type="text" name="links[__INDEX__][url]">
+    <label>Description</label>
+    <input type="text" name="links[__INDEX__][description]">
+  </div>
+</template>
+
+<script>
+  (function () {
+    let nextIndex = 100000; // stays clear of existing server-rendered indices
+
+    function addRow(containerId, templateId) {
+      const container = document.getElementById(containerId);
+      const template = document.getElementById(templateId);
+      const html = template.innerHTML.replaceAll('__INDEX__', String(nextIndex++));
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html.trim();
+      container.appendChild(wrapper.firstElementChild);
+    }
+
+    document.getElementById('add-document').addEventListener('click', function () {
+      addRow('documents-rows', 'document-row-template');
+    });
+    document.getElementById('add-link').addEventListener('click', function () {
+      addRow('links-rows', 'link-row-template');
+    });
+
+    document.getElementById('resources-form').addEventListener('click', function (event) {
+      if (event.target.classList.contains('admin-row__remove')) {
+        event.target.closest('.admin-row').remove();
+      }
+    });
+  })();
+</script>
+
+<%- include('partials/foot') %>

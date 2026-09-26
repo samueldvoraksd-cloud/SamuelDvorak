@@ -30,6 +30,7 @@
           <% site.nav.forEach(function(item) { %>
             <li><a href="<%= item.href %>" class="<%= (typeof active !== 'undefined' && active === item.label.toLowerCase()) ? 'is-active' : '' %>"><%= item.label %></a></li>
           <% }); %>
+          <li><a href="/admin" class="site-nav__admin">Admin</a></li>
         </ul>
       </nav>
     </div>

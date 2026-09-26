@@ -159,3 +159,30 @@
   gap: var(--space-2);
   align-items: center;
 }
+
+.admin-row {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.admin-row__remove {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground-soft);
+  border-radius: var(--radius-sm);
+  width: 28px;
+  height: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-row__remove:hover {
+  border-color: #FCA5A5;
+  color: #FCA5A5;
+}

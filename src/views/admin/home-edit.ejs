@@ -1,0 +1,36 @@
+<%- include('partials/head', { title: 'Home page content' }) %>
+
+<div class="admin-card">
+  <p><a href="/admin">&larr; Back</a></p>
+  <h1>Home page content</h1>
+
+  <% if (saved) { %>
+    <p class="admin-message admin-message--success">Saved.</p>
+  <% } %>
+
+  <form method="post" action="/admin/home" class="admin-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <label for="siteTitle">Name</label>
+    <input type="text" id="siteTitle" name="siteTitle" value="<%= form.siteTitle %>" required>
+
+    <label for="navBrand">Header label (shown top-left of every page)</label>
+    <input type="text" id="navBrand" name="navBrand" value="<%= form.navBrand %>" required>
+
+    <label for="tagline">Tagline (under your name)</label>
+    <input type="text" id="tagline" name="tagline" value="<%= form.tagline %>" required>
+
+    <label for="siteDescription">Short description (used for search engines, not shown on the page)</label>
+    <textarea id="siteDescription" name="siteDescription" rows="2"><%= form.siteDescription %></textarea>
+
+    <label for="bioText">Bio (leave a blank line between paragraphs)</label>
+    <textarea id="bioText" name="bioText" class="admin-form__body" rows="16"><%= form.bioText %></textarea>
+
+    <label for="contactEmail">Contact email</label>
+    <input type="email" id="contactEmail" name="contactEmail" value="<%= form.contactEmail %>" required>
+
+    <button type="submit" class="admin-btn">Save</button>
+  </form>
+</div>
+
+<%- include('partials/foot') %>

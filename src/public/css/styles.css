@@ -88,6 +88,19 @@ input:focus-visible {
   color: var(--color-accent);
 }
 
+.site-nav li:has(.site-nav__admin) {
+  margin-left: auto;
+}
+
+.site-nav__admin {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.site-nav__admin:hover {
+  opacity: 1;
+}
+
 .tile {
   background: var(--color-card);
   border: 1px solid var(--color-border);

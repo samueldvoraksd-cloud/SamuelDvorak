@@ -41,6 +41,24 @@ function clearAttempts(ip) {
   loginAttempts.delete(ip);
 }
 
+function parseContactEmail(value) {
+  const [user, ...rest] = String(value || '').trim().split('@');
+  return { user: user || '', domain: rest.join('@') || '' };
+}
+
+function normalizeRows(rows, fields) {
+  if (!rows) return [];
+  const list = Array.isArray(rows) ? rows : Object.values(rows);
+  return list
+    .filter((row) => row && typeof row === 'object')
+    .map((row) => {
+      const clean = {};
+      fields.forEach((field) => { clean[field] = String(row[field] || '').trim(); });
+      return clean;
+    })
+    .filter((row) => fields.some((field) => row[field]));
+}
+
 // --- Auth ---
 
 router.get('/login', (req, res) => {
@@ -95,13 +113,16 @@ router.get('/', requireAuth, (req, res) => {
 // --- Home / bio content ---
 
 router.get('/home', requireAuth, (req, res) => {
-  const raw = fs.readFileSync(SITE_JSON_PATH, 'utf8');
-  res.render('admin/json-editor', {
-    title: 'Home page content',
-    backLink: '/admin',
-    actionUrl: '/admin/home',
-    raw,
-    error: null,
+  const site = readJsonFile(SITE_JSON_PATH);
+  res.render('admin/home-edit', {
+    form: {
+      siteTitle: site.siteTitle || '',
+      navBrand: site.navBrand || '',
+      tagline: site.tagline || '',
+      siteDescription: site.siteDescription || '',
+      bioText: (site.bio || []).join('\n\n'),
+      contactEmail: site.contact ? `${site.contact.user}@${site.contact.domain}` : '',
+    },
     saved: false,
     csrfToken: csrf.getToken(req, res),
   });
@@ -109,42 +130,35 @@ router.get('/home', requireAuth, (req, res) => {
 
 router.post('/home', requireAuth, (req, res) => {
   if (!csrf.verifyToken(req)) return res.status(403).send('Session expired, please go back and try again.');
-  const raw = req.body.json || '';
-  try {
-    const parsed = JSON.parse(raw);
-    writeJsonFile(SITE_JSON_PATH, parsed);
-    res.render('admin/json-editor', {
-      title: 'Home page content',
-      backLink: '/admin',
-      actionUrl: '/admin/home',
-      raw: `${JSON.stringify(parsed, null, 2)}\n`,
-      error: null,
-      saved: true,
-      csrfToken: csrf.getToken(req, res),
-    });
-  } catch (err) {
-    res.status(400).render('admin/json-editor', {
-      title: 'Home page content',
-      backLink: '/admin',
-      actionUrl: '/admin/home',
-      raw,
-      error: `Invalid JSON: ${err.message}`,
-      saved: false,
-      csrfToken: csrf.getToken(req, res),
-    });
-  }
+  const existing = readJsonFile(SITE_JSON_PATH);
+  const { siteTitle, navBrand, tagline, siteDescription, bioText, contactEmail } = req.body || {};
+
+  const updated = {
+    siteTitle: (siteTitle || '').trim(),
+    navBrand: (navBrand || '').trim(),
+    tagline: (tagline || '').trim(),
+    siteDescription: (siteDescription || '').trim(),
+    bio: String(bioText || '').split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean),
+    nav: existing.nav,
+    contact: parseContactEmail(contactEmail),
+  };
+  writeJsonFile(SITE_JSON_PATH, updated);
+
+  res.render('admin/home-edit', {
+    form: { siteTitle: updated.siteTitle, navBrand: updated.navBrand, tagline: updated.tagline, siteDescription: updated.siteDescription, bioText: updated.bio.join('\n\n'), contactEmail },
+    saved: true,
+    csrfToken: csrf.getToken(req, res),
+  });
 });
 
 // --- Resources ---
 
 router.get('/resources', requireAuth, (req, res) => {
-  const raw = fs.readFileSync(RESOURCES_JSON_PATH, 'utf8');
-  res.render('admin/json-editor', {
-    title: 'Resources page content',
-    backLink: '/admin',
-    actionUrl: '/admin/resources',
-    raw,
-    error: null,
+  const resources = readJsonFile(RESOURCES_JSON_PATH);
+  res.render('admin/resources-edit', {
+    linksDescription: resources.linksDescription || '',
+    documents: resources.documents || [],
+    links: resources.links || [],
     saved: false,
     csrfToken: csrf.getToken(req, res),
   });
@@ -152,30 +166,22 @@ router.get('/resources', requireAuth, (req, res) => {
 
 router.post('/resources', requireAuth, (req, res) => {
   if (!csrf.verifyToken(req)) return res.status(403).send('Session expired, please go back and try again.');
-  const raw = req.body.json || '';
-  try {
-    const parsed = JSON.parse(raw);
-    writeJsonFile(RESOURCES_JSON_PATH, parsed);
-    res.render('admin/json-editor', {
-      title: 'Resources page content',
-      backLink: '/admin',
-      actionUrl: '/admin/resources',
-      raw: `${JSON.stringify(parsed, null, 2)}\n`,
-      error: null,
-      saved: true,
-      csrfToken: csrf.getToken(req, res),
-    });
-  } catch (err) {
-    res.status(400).render('admin/json-editor', {
-      title: 'Resources page content',
-      backLink: '/admin',
-      actionUrl: '/admin/resources',
-      raw,
-      error: `Invalid JSON: ${err.message}`,
-      saved: false,
-      csrfToken: csrf.getToken(req, res),
-    });
-  }
+  const { linksDescription, documents, links } = req.body || {};
+
+  const updated = {
+    documents: normalizeRows(documents, ['title', 'description', 'file']),
+    linksDescription: (linksDescription || '').trim(),
+    links: normalizeRows(links, ['title', 'description', 'url']),
+  };
+  writeJsonFile(RESOURCES_JSON_PATH, updated);
+
+  res.render('admin/resources-edit', {
+    linksDescription: updated.linksDescription,
+    documents: updated.documents,
+    links: updated.links,
+    saved: true,
+    csrfToken: csrf.getToken(req, res),
+  });
 });
 
 // --- Articles ---
