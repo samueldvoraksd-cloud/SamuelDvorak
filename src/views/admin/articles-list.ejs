@@ -1,0 +1,34 @@
+<%- include('partials/head', { title: 'Articles' }) %>
+
+<div class="admin-card">
+  <p><a href="/admin">&larr; Back</a></p>
+  <h1>Articles</h1>
+  <p><a href="/admin/articles/new" class="admin-btn">New article</a></p>
+
+  <% if (articles.length === 0) { %>
+    <p class="hint">No articles yet.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr><th>Title</th><th>Date</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% articles.forEach(function(article) { %>
+          <tr>
+            <td><%= article.title %></td>
+            <td><%= article.date %></td>
+            <td class="admin-table__actions">
+              <a href="/admin/articles/<%= article.slug %>/edit">Edit</a>
+              <form method="post" action="/admin/articles/<%= article.slug %>/delete" onsubmit="return confirm('Delete this article? This cannot be undone.');">
+                <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+                <button type="submit" class="admin-btn admin-btn--danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<%- include('partials/foot') %>

@@ -31,4 +31,46 @@ function getBySlug(slug) {
   return loadAll().find((article) => article.slug === slug) || null;
 }
 
-module.exports = { getAll, getBySlug };
+function isValidSlug(slug) {
+  return typeof slug === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+}
+
+function filePathForSlug(slug) {
+  return path.join(ARTICLES_DIR, `${slug}.md`);
+}
+
+function getRawBySlug(slug) {
+  if (!isValidSlug(slug)) return null;
+  const filePath = filePathForSlug(slug);
+  if (!fs.existsSync(filePath)) return null;
+  const raw = fs.readFileSync(filePath, 'utf8');
+  const { data, content } = matter(raw);
+  return { slug, title: data.title, date: data.date, excerpt: data.excerpt, body: content.trim() };
+}
+
+function save({ slug, title, date, excerpt, body }, originalSlug) {
+  if (!isValidSlug(slug)) {
+    throw new Error('Slug must be lowercase letters, numbers, and hyphens only.');
+  }
+  if (!fs.existsSync(ARTICLES_DIR)) {
+    fs.mkdirSync(ARTICLES_DIR, { recursive: true });
+  }
+  const targetPath = filePathForSlug(slug);
+  if (slug !== originalSlug && fs.existsSync(targetPath)) {
+    throw new Error(`An article with the slug "${slug}" already exists.`);
+  }
+  const fileContents = matter.stringify(`${body.trim()}\n`, { slug, title, date, excerpt });
+  fs.writeFileSync(targetPath, fileContents, 'utf8');
+  if (originalSlug && originalSlug !== slug) {
+    const oldPath = filePathForSlug(originalSlug);
+    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+  }
+}
+
+function remove(slug) {
+  if (!isValidSlug(slug)) return;
+  const filePath = filePathForSlug(slug);
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+}
+
+module.exports = { getAll, getBySlug, getRawBySlug, save, remove, isValidSlug };

@@ -1,0 +1,20 @@
+<%- include('partials/head', { title: 'Log in', loggedIn: false }) %>
+
+<div class="admin-card">
+  <h1>Admin login</h1>
+  <% if (error) { %>
+    <p class="admin-message admin-message--error"><%= error %></p>
+  <% } %>
+  <form method="post" action="/admin/login" class="admin-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" required autocomplete="username">
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required autocomplete="current-password">
+
+    <button type="submit" class="admin-btn">Log in</button>
+  </form>
+</div>
+
+<%- include('partials/foot') %>

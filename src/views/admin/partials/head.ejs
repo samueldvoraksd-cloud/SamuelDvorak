@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> — Admin</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <% if (typeof loggedIn === 'undefined' || loggedIn) { %>
+  <nav class="admin-nav">
+    <a href="/admin">Dashboard</a>
+    <a href="/admin/home">Home content</a>
+    <a href="/admin/resources">Resources</a>
+    <a href="/admin/articles">Articles</a>
+    <span class="admin-nav__spacer"></span>
+    <a href="/" target="_blank" rel="noopener">View site &rarr;</a>
+    <form method="post" action="/admin/logout">
+      <button type="submit" class="admin-btn admin-btn--secondary">Log out</button>
+    </form>
+  </nav>
+  <% } %>
+  <div class="admin-shell">

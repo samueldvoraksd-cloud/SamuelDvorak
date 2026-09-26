@@ -1,0 +1,14 @@
+<%- include('partials/head', { title: 'Dashboard' }) %>
+
+<div class="admin-card">
+  <h1>Admin dashboard</h1>
+  <p class="hint">Edit your site's content directly. Changes save immediately and go live on the next page load.</p>
+</div>
+
+<ul class="admin-links">
+  <li><a href="/admin/home">Home page content &mdash; tagline, bio, contact</a></li>
+  <li><a href="/admin/resources">Resources page &mdash; documents and links</a></li>
+  <li><a href="/admin/articles">Articles &mdash; <%= articleCount %> published</a></li>
+</ul>
+
+<%- include('partials/foot') %>
