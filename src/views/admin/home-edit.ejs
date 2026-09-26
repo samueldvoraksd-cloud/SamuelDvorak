@@ -4,6 +4,12 @@
   <p><a href="/admin">&larr; Back</a></p>
   <h1>Home page content</h1>
 
+  <% if (githubConfigured) { %>
+    <p class="admin-notice">Saving here goes live immediately but only exists on this server until you click <strong>Publish changes</strong> (top of the page). Publishing commits everything to GitHub and redeploys automatically.</p>
+  <% } else { %>
+    <p class="admin-notice">GitHub sync isn't configured. Changes here are saved to this server's disk only, which Render's free tier wipes on redeploy or after the site's been idle.</p>
+  <% } %>
+
   <% if (saved) { %>
     <p class="admin-message admin-message--success">Saved.</p>
   <% } %>

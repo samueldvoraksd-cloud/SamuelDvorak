@@ -21,6 +21,12 @@
     <a href="/admin/articles">Articles</a>
     <span class="admin-nav__spacer"></span>
     <a href="/" target="_blank" rel="noopener">View site &rarr;</a>
+    <% if (typeof githubConfigured !== 'undefined' && githubConfigured) { %>
+    <form method="post" action="/admin/publish">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button type="submit" class="admin-btn">Publish changes</button>
+    </form>
+    <% } %>
     <form method="post" action="/admin/logout">
       <button type="submit" class="admin-btn admin-btn--secondary">Log out</button>
     </form>

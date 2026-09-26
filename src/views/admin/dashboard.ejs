@@ -3,6 +3,13 @@
 <div class="admin-card">
   <h1>Admin dashboard</h1>
   <p class="hint">Edit your site's content directly. Changes save immediately and go live on the next page load.</p>
+  <% if (githubConfigured) { %>
+    <p class="hint">Make as many edits as you like &mdash; nothing survives a redeploy until you click <strong>Publish changes</strong> (top of the page). Publishing batches everything into one GitHub commit and one redeploy, so you only get logged out once no matter how many edits you made.</p>
+  <% } %>
+
+  <% if (publishResult) { %>
+    <p class="admin-message <%= publishResult.startsWith('Publish failed') ? 'admin-message--error' : 'admin-message--success' %>"><%= publishResult %></p>
+  <% } %>
 </div>
 
 <ul class="admin-links">

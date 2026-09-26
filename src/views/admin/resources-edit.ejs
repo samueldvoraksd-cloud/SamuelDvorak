@@ -4,7 +4,11 @@
   <p><a href="/admin">&larr; Back</a></p>
   <h1>Resources page content</h1>
 
-  <p class="admin-notice">Uploaded PDFs are saved to this server's disk. On Render's free tier, that disk doesn't survive a redeploy or a spin-down restart &mdash; if a document disappears after the site's been idle, re-upload it here.</p>
+  <% if (githubConfigured) { %>
+    <p class="admin-notice">Saving here goes live immediately but only exists on this server until you click <strong>Publish changes</strong> (top of the page). Publishing commits everything &mdash; including uploaded PDFs &mdash; to GitHub and redeploys automatically.</p>
+  <% } else { %>
+    <p class="admin-notice">GitHub sync isn't configured. Uploaded PDFs and edits here are saved to this server's disk only, which Render's free tier wipes on redeploy or after the site's been idle.</p>
+  <% } %>
 
   <% if (saved) { %>
     <p class="admin-message admin-message--success">Saved.</p>

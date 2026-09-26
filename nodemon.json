@@ -1,0 +1,3 @@
+{
+  "ignore": ["src/content/**", "src/public/documents/**"]
+}

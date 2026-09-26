@@ -7,10 +7,12 @@ const router = express.Router();
 const requireAuth = require('../middleware/requireAuth');
 const csrf = require('../services/csrf');
 const articlesService = require('../services/articles');
+const github = require('../services/github');
 
 const SITE_JSON_PATH = path.join(__dirname, '..', 'content', 'site.json');
 const RESOURCES_JSON_PATH = path.join(__dirname, '..', 'content', 'resources.json');
 const DOCUMENTS_DIR = path.join(__dirname, '..', 'public', 'documents');
+const ARTICLES_DIR = path.join(__dirname, '..', 'content', 'articles');
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -87,12 +89,80 @@ function normalizeRows(rows, fields) {
 function cleanupOrphanedDocuments(previousDocs, newDocs) {
   const before = new Set((previousDocs || []).map((d) => d.file).filter(Boolean));
   const after = new Set((newDocs || []).map((d) => d.file).filter(Boolean));
+  const removed = [];
   before.forEach((file) => {
     if (after.has(file) || !file.startsWith('/documents/')) return;
     const abs = path.join(DOCUMENTS_DIR, path.basename(file));
-    try { fs.unlinkSync(abs); } catch (err) { /* best effort cleanup */ }
+    try {
+      fs.unlinkSync(abs);
+      removed.push(file);
+    } catch (err) { /* best effort cleanup */ }
   });
+  return removed;
 }
+
+// Reconciles every piece of admin-editable content against GitHub in one
+// pass: commits anything local that's new or changed, and deletes anything
+// on GitHub that no longer exists locally (renamed/removed articles or
+// documents). Safe to call repeatedly — commitFile/deleteFile no-op when
+// there's nothing to change, so batching several unrelated edits into one
+// publish only ever produces the commits that actually have content.
+async function publishAll() {
+  const summary = { changed: [], deleted: [] };
+
+  async function syncFile(repoPath, absPath, message) {
+    const result = await github.commitFile(repoPath, fs.readFileSync(absPath), message);
+    if (!result.skipped) summary.changed.push(repoPath);
+  }
+
+  // Text files get their line endings normalized to LF before comparing —
+  // on Windows, git checks these out as CRLF locally while GitHub stores
+  // LF, which would otherwise make every publish see a "change" that isn't
+  // actually there. Binary files (PDFs) must go through syncFile untouched.
+  async function syncTextFile(repoPath, absPath, message) {
+    const normalized = fs.readFileSync(absPath, 'utf8').replace(/\r\n/g, '\n');
+    const result = await github.commitFile(repoPath, Buffer.from(normalized, 'utf8'), message);
+    if (!result.skipped) summary.changed.push(repoPath);
+  }
+
+  await syncTextFile('src/content/site.json', SITE_JSON_PATH, 'Update home page content via admin');
+  await syncTextFile('src/content/resources.json', RESOURCES_JSON_PATH, 'Update resources page via admin');
+
+  const localArticles = fs.existsSync(ARTICLES_DIR)
+    ? fs.readdirSync(ARTICLES_DIR).filter((f) => f.endsWith('.md'))
+    : [];
+  const remoteArticles = await github.listDir('src/content/articles');
+  for (const file of localArticles) {
+    await syncTextFile(`src/content/articles/${file}`, path.join(ARTICLES_DIR, file), `Update article: ${file}`);
+  }
+  for (const entry of remoteArticles) {
+    if (entry.type === 'file' && !localArticles.includes(entry.name)) {
+      await github.deleteFile(`src/content/articles/${entry.name}`, `Delete article: ${entry.name}`);
+      summary.deleted.push(`src/content/articles/${entry.name}`);
+    }
+  }
+
+  const localDocs = fs.existsSync(DOCUMENTS_DIR) ? fs.readdirSync(DOCUMENTS_DIR) : [];
+  const remoteDocs = await github.listDir('src/public/documents');
+  for (const file of localDocs) {
+    await syncFile(`src/public/documents/${file}`, path.join(DOCUMENTS_DIR, file), `Add document: ${file}`);
+  }
+  for (const entry of remoteDocs) {
+    if (entry.type === 'file' && !localDocs.includes(entry.name)) {
+      await github.deleteFile(`src/public/documents/${entry.name}`, `Remove document: ${entry.name}`);
+      summary.deleted.push(`src/public/documents/${entry.name}`);
+    }
+  }
+
+  return summary;
+}
+
+// Makes githubConfigured available to every view under /admin without
+// having to thread it through each individual render() call.
+router.use((req, res, next) => {
+  res.locals.githubConfigured = github.isConfigured();
+  next();
+});
 
 // --- Auth ---
 
@@ -139,10 +209,32 @@ router.post('/logout', requireAuth, (req, res) => {
   req.session.destroy(() => res.redirect('/admin/login'));
 });
 
+// --- Publish (syncs everything to GitHub in one batch) ---
+
+router.post('/publish', requireAuth, async (req, res) => {
+  if (!csrf.verifyToken(req)) return res.status(403).send('Session expired, please go back and try again.');
+  try {
+    const summary = await publishAll();
+    const total = summary.changed.length + summary.deleted.length;
+    const message = total === 0
+      ? 'Nothing to publish — GitHub already matches your latest saves.'
+      : `Published: ${summary.changed.length} file(s) updated, ${summary.deleted.length} removed. Render will redeploy shortly.`;
+    res.redirect(`/admin?publishResult=${encodeURIComponent(message)}`);
+  } catch (err) {
+    console.error('Publish failed:', err.message);
+    res.redirect(`/admin?publishResult=${encodeURIComponent(`Publish failed: ${err.message}`)}`);
+  }
+});
+
 // --- Dashboard ---
 
 router.get('/', requireAuth, (req, res) => {
-  res.render('admin/dashboard', { articleCount: articlesService.getAll().length });
+  res.render('admin/dashboard', {
+    articleCount: articlesService.getAll().length,
+    githubConfigured: github.isConfigured(),
+    publishResult: req.query.publishResult || null,
+    csrfToken: csrf.getToken(req, res),
+  });
 });
 
 // --- Home / bio content ---
@@ -159,6 +251,7 @@ router.get('/home', requireAuth, (req, res) => {
       contactEmail: site.contact ? `${site.contact.user}@${site.contact.domain}` : '',
     },
     saved: false,
+    githubConfigured: github.isConfigured(),
     csrfToken: csrf.getToken(req, res),
   });
 });
@@ -182,6 +275,7 @@ router.post('/home', requireAuth, (req, res) => {
   res.render('admin/home-edit', {
     form: { siteTitle: updated.siteTitle, navBrand: updated.navBrand, tagline: updated.tagline, siteDescription: updated.siteDescription, bioText: updated.bio.join('\n\n'), contactEmail },
     saved: true,
+    githubConfigured: github.isConfigured(),
     csrfToken: csrf.getToken(req, res),
   });
 });
@@ -195,6 +289,7 @@ router.get('/resources', requireAuth, (req, res) => {
     documents: resources.documents || [],
     links: resources.links || [],
     saved: false,
+    githubConfigured: github.isConfigured(),
     csrfToken: csrf.getToken(req, res),
   });
 });
@@ -225,6 +320,7 @@ router.post('/resources', requireAuth, upload.any(), (req, res) => {
     documents: updated.documents,
     links: updated.links,
     saved: true,
+    githubConfigured: github.isConfigured(),
     csrfToken: csrf.getToken(req, res),
   });
 });
@@ -232,7 +328,10 @@ router.post('/resources', requireAuth, upload.any(), (req, res) => {
 // --- Articles ---
 
 router.get('/articles', requireAuth, (req, res) => {
-  res.render('admin/articles-list', { articles: articlesService.getAll(), csrfToken: csrf.getToken(req, res) });
+  res.render('admin/articles-list', {
+    articles: articlesService.getAll(),
+    csrfToken: csrf.getToken(req, res),
+  });
 });
 
 router.get('/articles/new', requireAuth, (req, res) => {
