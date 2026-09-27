@@ -8,6 +8,7 @@ const requireAuth = require('../middleware/requireAuth');
 const csrf = require('../services/csrf');
 const articlesService = require('../services/articles');
 const github = require('../services/github');
+const kit = require('../services/kit');
 
 const SITE_JSON_PATH = path.join(__dirname, '..', 'content', 'site.json');
 const RESOURCES_JSON_PATH = path.join(__dirname, '..', 'content', 'resources.json');
@@ -433,6 +434,77 @@ router.post('/reviews/order', requireAuth, (req, res) => {
     githubConfigured: github.isConfigured(),
     csrfToken: csrf.getToken(req, res),
   });
+});
+
+// --- Notify subscribers ---
+
+// Everything a subscriber could be told about, in one list.
+function notifiableItems(baseUrl) {
+  const resources = fs.existsSync(RESOURCES_JSON_PATH) ? readJsonFile(RESOURCES_JSON_PATH) : {};
+  const items = articlesService.getAll().map((article) => ({
+    kind: 'Article',
+    title: article.title,
+    description: article.excerpt || '',
+    url: `${baseUrl}/articles/${article.slug}`,
+  }));
+  (resources.documents || []).forEach((doc) => {
+    items.push({
+      kind: 'Document',
+      title: doc.title,
+      description: doc.description || '',
+      url: doc.file ? `${baseUrl}${doc.file}` : `${baseUrl}/resources`,
+    });
+  });
+  (resources.links || []).forEach((link) => {
+    items.push({
+      kind: 'Link',
+      title: link.title,
+      description: link.description || '',
+      url: link.url || `${baseUrl}/resources`,
+    });
+  });
+  return items;
+}
+
+function renderNotify(req, res, extra = {}) {
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  res.render('admin/notify', {
+    items: notifiableItems(baseUrl),
+    kitConfigured: kit.isConfigured(),
+    githubConfigured: github.isConfigured(),
+    csrfToken: csrf.getToken(req, res),
+    sent: null,
+    error: null,
+    ...extra,
+  });
+}
+
+router.get('/notify', requireAuth, (req, res) => renderNotify(req, res));
+
+router.post('/notify', requireAuth, async (req, res) => {
+  if (!csrf.verifyToken(req)) return res.status(403).send('Session expired, please go back and try again.');
+  const subject = String(req.body.subject || '').trim();
+  const body = String(req.body.body || '').trim();
+
+  if (!subject || !body) {
+    return renderNotify(req, res, { error: 'Both a subject and a message are required.' });
+  }
+
+  const content = body
+    .split(/\n{2,}/)
+    .map((paragraph) => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
+    .join('\n');
+
+  const result = await kit.createBroadcastDraft({ subject, content });
+  if (!result.ok) {
+    return renderNotify(req, res, {
+      error: result.reason === 'not_configured'
+        ? 'Kit isn\'t connected yet — add KIT_API_KEY in Render first.'
+        : 'Kit rejected the draft. Check the server logs for details.',
+    });
+  }
+
+  renderNotify(req, res, { sent: result.broadcast });
 });
 
 // --- Articles ---

@@ -7,6 +7,7 @@ const indexRouter = require('./src/routes/index');
 const articlesRouter = require('./src/routes/articles');
 const resourcesRouter = require('./src/routes/resources');
 const contactRouter = require('./src/routes/contact');
+const subscribeRouter = require('./src/routes/subscribe');
 const llmsRouter = require('./src/routes/llms');
 const adminRouter = require('./src/routes/admin');
 const reviewsRouter = require('./src/routes/reviews');
@@ -51,6 +52,7 @@ app.use('/articles', articlesRouter);
 app.use('/resources', resourcesRouter);
 app.use('/reviews', reviewsRouter);
 app.use('/api/contact', contactRouter);
+app.use('/api/subscribe', subscribeRouter);
 app.use('/llms.txt', llmsRouter);
 app.use('/admin', adminRouter);
 

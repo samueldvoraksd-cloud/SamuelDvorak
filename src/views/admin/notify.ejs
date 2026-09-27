@@ -1,0 +1,79 @@
+<%- include('partials/head', { title: 'Notify subscribers' }) %>
+
+<div class="admin-card">
+  <p><a href="/admin">&larr; Back</a></p>
+  <h1>Notify subscribers</h1>
+
+  <% if (kitConfigured) { %>
+    <p class="hint">Pick what you just posted, edit the wording, and this saves a <strong>draft</strong> in Kit. Nothing is emailed until you open Kit and hit send yourself.</p>
+  <% } else { %>
+    <p class="admin-notice">Kit isn't connected yet. Add a <strong>KIT_API_KEY</strong> environment variable in Render (and redeploy) before this will work.</p>
+  <% } %>
+
+  <% if (error) { %>
+    <p class="admin-message admin-message--error"><%= error %></p>
+  <% } %>
+
+  <% if (sent) { %>
+    <p class="admin-message admin-message--success">
+      Draft created in Kit: <strong><%= sent.subject %></strong>.
+      <a href="https://app.kit.com/campaigns" target="_blank" rel="noopener">Open Kit to review and send &rarr;</a>
+    </p>
+  <% } %>
+
+  <form method="post" action="/admin/notify" class="admin-form" id="notify-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <label for="notify-item">What did you post?</label>
+    <select id="notify-item">
+      <option value="">— Write my own —</option>
+      <% items.forEach(function(item, i) { %>
+        <option
+          value="<%= i %>"
+          data-title="<%= item.title %>"
+          data-description="<%= item.description %>"
+          data-url="<%= item.url %>"
+          data-kind="<%= item.kind %>"
+        ><%= item.kind %>: <%= item.title %></option>
+      <% }); %>
+    </select>
+
+    <label for="notify-subject">Subject</label>
+    <input type="text" id="notify-subject" name="subject" value="">
+
+    <label for="notify-body">Message</label>
+    <textarea id="notify-body" name="body" rows="10"></textarea>
+
+    <p><button type="submit" class="admin-btn">Create draft in Kit</button></p>
+  </form>
+</div>
+
+<script>
+  (function () {
+    const select = document.getElementById('notify-item');
+    const subject = document.getElementById('notify-subject');
+    const body = document.getElementById('notify-body');
+
+    select.addEventListener('change', function () {
+      const option = select.selectedOptions[0];
+      if (!option || !option.dataset.title) {
+        subject.value = '';
+        body.value = '';
+        return;
+      }
+      const kind = option.dataset.kind;
+      const title = option.dataset.title;
+      const description = option.dataset.description;
+      const url = option.dataset.url;
+
+      const lead = kind === 'Article'
+        ? 'I just published a new article:'
+        : (kind === 'Link' ? 'I just posted something new:' : 'I just added a new resource:');
+
+      subject.value = kind === 'Article' ? ('New article: ' + title) : ('New ' + kind.toLowerCase() + ': ' + title);
+      body.value = lead + '\n\n' + title + (description ? '\n' + description : '') + '\n\n' + url + '\n\nBlue skies,\nSam';
+    });
+  })();
+</script>
+
+<%- include('partials/foot') %>

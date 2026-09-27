@@ -247,6 +247,64 @@ input:focus-visible {
   overflow: hidden;
 }
 
+.subscribe {
+  padding: var(--space-4);
+  margin: var(--space-5) 0;
+}
+
+.subscribe h2 {
+  margin-top: 0;
+}
+
+.subscribe__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.subscribe__form input[type="email"] {
+  flex: 1 1 260px;
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--space-1) var(--space-2);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+  font-size: 1rem;
+}
+
+.subscribe__form input[type="email"]:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.subscribe__submit {
+  background: var(--gradient-accent);
+  color: var(--color-on-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  min-height: 44px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.subscribe__submit:hover { opacity: 0.9; }
+.subscribe__submit:disabled { opacity: 0.6; cursor: default; }
+
+.subscribe__message {
+  font-size: 0.9rem;
+  min-height: 1.2em;
+  margin: var(--space-2) 0 0;
+}
+
+.subscribe__message--success { color: #86EFAC; }
+.subscribe__message--error { color: #FCA5A5; }
+
 .contact-form__message {
   font-size: 0.9rem;
   min-height: 1.2em;
