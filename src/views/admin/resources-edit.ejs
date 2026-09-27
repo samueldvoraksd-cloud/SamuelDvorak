@@ -35,10 +35,10 @@
               <button type="button" class="js-clear-file" data-target-field="file" data-default-label="Drag a PDF here or click to browse">Remove file</button>
             </p>
           <% } %>
-          <label class="admin-dropzone" data-field="file">
+          <div class="admin-dropzone" data-field="file">
             <input type="file" accept="application/pdf" name="documents[<%= i %>][fileUpload]">
             <span class="admin-dropzone__label"><%= doc.file ? 'Drag a new PDF here to replace, or click to browse' : 'Drag a PDF here or click to browse' %></span>
-          </label>
+          </div>
         </div>
       <% }); %>
     </div>
@@ -76,10 +76,10 @@
     <textarea class="admin-autosize" rows="1" name="documents[__INDEX__][description]"></textarea>
     <label>PDF</label>
     <input type="hidden" name="documents[__INDEX__][file]" value="">
-    <label class="admin-dropzone" data-field="file">
+    <div class="admin-dropzone" data-field="file">
       <input type="file" accept="application/pdf" name="documents[__INDEX__][fileUpload]">
       <span class="admin-dropzone__label">Drag a PDF here or click to browse</span>
-    </label>
+    </div>
   </div>
 </template>
 

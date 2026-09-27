@@ -14,13 +14,10 @@
       const label = zone.querySelector('.admin-dropzone__label');
       if (!input) return;
 
-      // zone is a <label> wrapping the file input, which should open the
-      // picker natively on click — but that silently fails in some browser/
-      // extension combinations, so force it explicitly as a fallback too.
-      // Calling .click() on a file input a second time is a safe no-op.
-      zone.addEventListener('click', function (e) {
-        if (e.target === input) return;
-        e.preventDefault();
+      // zone is a plain <div>, not a <label> — deliberately, so there's
+      // exactly one way this opens the picker (this handler) instead of
+      // racing against a <label>'s native click-forwarding behavior.
+      zone.addEventListener('click', function () {
         input.click();
       });
 

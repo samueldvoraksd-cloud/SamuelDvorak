@@ -31,10 +31,10 @@
               <button type="button" class="js-clear-file" data-target-field="screenshot" data-default-label="Drag a screenshot here or click to browse">Remove</button>
             </p>
           <% } %>
-          <label class="admin-dropzone" data-field="screenshot">
+          <div class="admin-dropzone" data-field="screenshot">
             <input type="file" accept="image/*" name="reviews[<%= i %>][screenshotUpload]">
             <span class="admin-dropzone__label"><%= review.screenshot ? 'Drag a new screenshot here to replace, or click to browse' : 'Drag a screenshot here or click to browse' %></span>
-          </label>
+          </div>
 
           <label>Photo (optional)</label>
           <input type="hidden" name="reviews[<%= i %>][photo]" value="<%= review.photo %>">
@@ -45,10 +45,10 @@
               <button type="button" class="js-clear-file" data-target-field="photo" data-default-label="Drag a photo here or click to browse">Remove</button>
             </p>
           <% } %>
-          <label class="admin-dropzone" data-field="photo">
+          <div class="admin-dropzone" data-field="photo">
             <input type="file" accept="image/*" name="reviews[<%= i %>][photoUpload]">
             <span class="admin-dropzone__label"><%= review.photo ? 'Drag a new photo here to replace, or click to browse' : 'Drag a photo here or click to browse' %></span>
-          </label>
+          </div>
 
           <label>Caption (optional)</label>
           <textarea class="admin-autosize" rows="1" name="reviews[<%= i %>][caption]"><%= review.caption %></textarea>
@@ -67,17 +67,17 @@
 
     <label>Review screenshot</label>
     <input type="hidden" name="reviews[__INDEX__][screenshot]" value="">
-    <label class="admin-dropzone" data-field="screenshot">
+    <div class="admin-dropzone" data-field="screenshot">
       <input type="file" accept="image/*" name="reviews[__INDEX__][screenshotUpload]">
       <span class="admin-dropzone__label">Drag a screenshot here or click to browse</span>
-    </label>
+    </div>
 
     <label>Photo (optional)</label>
     <input type="hidden" name="reviews[__INDEX__][photo]" value="">
-    <label class="admin-dropzone" data-field="photo">
+    <div class="admin-dropzone" data-field="photo">
       <input type="file" accept="image/*" name="reviews[__INDEX__][photoUpload]">
       <span class="admin-dropzone__label">Drag a photo here or click to browse</span>
-    </label>
+    </div>
 
     <label>Caption (optional)</label>
     <textarea class="admin-autosize" rows="1" name="reviews[__INDEX__][caption]"></textarea>
