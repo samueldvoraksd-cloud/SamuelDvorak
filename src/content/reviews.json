@@ -8,5 +8,20 @@
     "screenshot": "/images/reviews/chase-mann-review.png",
     "photo": "",
     "caption": ""
+  },
+  {
+    "screenshot": "",
+    "photo": "/images/reviews/gabriel-tacheny-solo.jpg",
+    "caption": "Gabriel Tacheny's first solo"
+  },
+  {
+    "screenshot": "",
+    "photo": "/images/reviews/ajay-gundanna-checkride.jpg",
+    "caption": "Ajay Gundanna passing his private pilot checkride"
+  },
+  {
+    "screenshot": "",
+    "photo": "/images/reviews/john-smart-solo.jpg",
+    "caption": "John Smart's solo flight"
   }
 ]
