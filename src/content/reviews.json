@@ -24,10 +24,10 @@
     "caption": "Cuatro Smart's solo flight"
   },
   {
-    "reviewerName": "",
-    "rating": 0,
-    "reviewDate": "",
-    "text": "",
+    "reviewerName": "Gabriel Tacheny",
+    "rating": 5,
+    "reviewDate": "September 2026",
+    "text": "I've been flying here for the past few months with Samuel Dvorak and have been extremely satisfied the entire time. Not only is the flight school itself well rounded but the pilots as well. Their knowledge and personality make learning the mechanics and getting comfortable flying so easy. A trait I admire more about my own instructor Sam is that he is always letting me lead when flying and allows me to make mistakes to continue improving. I just recently had my solo at Easterwood and felt extremely ready and comfortable because of my training. I would highly recommend flying with Brazos valley and more importantly with Sam if you get the chance!",
     "photo": "/images/reviews/gabriel-tacheny-solo.jpg",
     "caption": "Gabriel Tacheny's first solo"
   },
@@ -40,11 +40,19 @@
     "caption": "Ajay Gundanna passing his private pilot checkride"
   },
   {
-    "reviewerName": "",
-    "rating": 0,
+    "reviewerName": "Adrian",
+    "rating": 5,
     "reviewDate": "",
-    "text": "",
+    "text": "My first solo",
     "photo": "/images/reviews/img-3998-1790475896404.jpeg",
-    "caption": "Adrian's first solo"
+    "caption": ""
+  },
+  {
+    "reviewerName": "Jack Harvey",
+    "rating": 5,
+    "reviewDate": "September 2026",
+    "text": "Everytime I fly up there with my CFI Samuel Dvorak, I feel comfortable and confident. He has a lot of patience and explains things that make greater sense to me. I've taken in a lot of information that made sense and seen lots of improvement with my skills thanks to him. He really knows his stuff.",
+    "photo": "",
+    "caption": ""
   }
 ]
