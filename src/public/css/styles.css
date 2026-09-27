@@ -460,10 +460,8 @@ input:focus-visible {
   list-style: none;
   margin: var(--space-3) 0 var(--space-5);
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
-  align-items: start;
-  gap: var(--space-3);
+  columns: 440px 2;
+  column-gap: var(--space-3);
 }
 
 .review-card {
@@ -471,6 +469,8 @@ input:focus-visible {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  break-inside: avoid;
+  margin-bottom: var(--space-3);
 }
 
 .review-card__header {
@@ -534,7 +534,7 @@ input:focus-visible {
 
 @media (max-width: 768px) {
   .review-grid {
-    grid-template-columns: 1fr;
+    columns: 1;
   }
 }
 
