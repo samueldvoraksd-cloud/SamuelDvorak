@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const site = require('../content/site.json');
+const { getSite } = require('../services/content');
 const articlesService = require('../services/articles');
 
 router.get('/', (req, res) => {
+  const site = getSite();
   const base = `${req.protocol}://${req.get('host')}`;
   const articles = articlesService.getAll();
 

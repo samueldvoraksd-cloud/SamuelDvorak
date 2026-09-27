@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const site = require('../content/site.json');
+const { getSite } = require('../services/content');
 const { canonicalUrl } = require('../services/url');
 
 router.get('/', (req, res) => {
+  const site = getSite();
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Person',

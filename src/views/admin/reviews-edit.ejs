@@ -1,0 +1,112 @@
+<%- include('partials/head', { title: 'Reviews page content' }) %>
+
+<div class="admin-card">
+  <p><a href="/admin">&larr; Back</a></p>
+  <h1>Reviews page content</h1>
+
+  <% if (githubConfigured) { %>
+    <p class="admin-notice">Saving here goes live immediately but only exists on this server until you click <strong>Publish changes</strong> (top of the page). Publishing commits everything &mdash; including uploaded images &mdash; to GitHub and redeploys automatically.</p>
+  <% } else { %>
+    <p class="admin-notice">GitHub sync isn't configured. Uploaded images and edits here are saved to this server's disk only, which Render's free tier wipes on redeploy or after the site's been idle.</p>
+  <% } %>
+
+  <% if (saved) { %>
+    <p class="admin-message admin-message--success">Saved.</p>
+  <% } %>
+
+  <form method="post" action="/admin/reviews" class="admin-form" id="reviews-form" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <div id="reviews-rows">
+      <% reviews.forEach(function(review, i) { %>
+        <div class="admin-row">
+          <button type="button" class="admin-row__remove" aria-label="Remove review">&times;</button>
+
+          <label>Review screenshot</label>
+          <input type="hidden" name="reviews[<%= i %>][screenshot]" value="<%= review.screenshot %>">
+          <% if (review.screenshot) { %>
+            <p class="admin-dropzone__current" data-current-line="screenshot">
+              Current: <a href="<%= review.screenshot %>" target="_blank" rel="noopener"><%= review.screenshot.split('/').pop() %></a>
+              &mdash;
+              <button type="button" class="js-clear-file" data-target-field="screenshot" data-default-label="Drag a screenshot here or click to browse">Remove</button>
+            </p>
+          <% } %>
+          <label class="admin-dropzone" data-field="screenshot">
+            <input type="file" accept="image/*" name="reviews[<%= i %>][screenshotUpload]">
+            <span class="admin-dropzone__label"><%= review.screenshot ? 'Drag a new screenshot here to replace, or click to browse' : 'Drag a screenshot here or click to browse' %></span>
+          </label>
+
+          <label>Photo (optional)</label>
+          <input type="hidden" name="reviews[<%= i %>][photo]" value="<%= review.photo %>">
+          <% if (review.photo) { %>
+            <p class="admin-dropzone__current" data-current-line="photo">
+              Current: <a href="<%= review.photo %>" target="_blank" rel="noopener"><%= review.photo.split('/').pop() %></a>
+              &mdash;
+              <button type="button" class="js-clear-file" data-target-field="photo" data-default-label="Drag a photo here or click to browse">Remove</button>
+            </p>
+          <% } %>
+          <label class="admin-dropzone" data-field="photo">
+            <input type="file" accept="image/*" name="reviews[<%= i %>][photoUpload]">
+            <span class="admin-dropzone__label"><%= review.photo ? 'Drag a new photo here to replace, or click to browse' : 'Drag a photo here or click to browse' %></span>
+          </label>
+
+          <label>Caption (optional)</label>
+          <textarea class="admin-autosize" rows="1" name="reviews[<%= i %>][caption]"><%= review.caption %></textarea>
+        </div>
+      <% }); %>
+    </div>
+    <button type="button" class="admin-btn admin-btn--secondary" id="add-review">+ Add review</button>
+
+    <p><button type="submit" class="admin-btn">Save</button></p>
+  </form>
+</div>
+
+<template id="review-row-template">
+  <div class="admin-row">
+    <button type="button" class="admin-row__remove" aria-label="Remove review">&times;</button>
+
+    <label>Review screenshot</label>
+    <input type="hidden" name="reviews[__INDEX__][screenshot]" value="">
+    <label class="admin-dropzone" data-field="screenshot">
+      <input type="file" accept="image/*" name="reviews[__INDEX__][screenshotUpload]">
+      <span class="admin-dropzone__label">Drag a screenshot here or click to browse</span>
+    </label>
+
+    <label>Photo (optional)</label>
+    <input type="hidden" name="reviews[__INDEX__][photo]" value="">
+    <label class="admin-dropzone" data-field="photo">
+      <input type="file" accept="image/*" name="reviews[__INDEX__][photoUpload]">
+      <span class="admin-dropzone__label">Drag a photo here or click to browse</span>
+    </label>
+
+    <label>Caption (optional)</label>
+    <textarea class="admin-autosize" rows="1" name="reviews[__INDEX__][caption]"></textarea>
+  </div>
+</template>
+
+<script>
+  (function () {
+    let nextIndex = 100000; // stays clear of existing server-rendered indices
+
+    document.getElementById('add-review').addEventListener('click', function () {
+      const container = document.getElementById('reviews-rows');
+      const template = document.getElementById('review-row-template');
+      const html = template.innerHTML.replaceAll('__INDEX__', String(nextIndex++));
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html.trim();
+      const row = wrapper.firstElementChild;
+      container.appendChild(row);
+      row.querySelectorAll('.admin-autosize').forEach(function (el) {
+        el.dispatchEvent(new Event('input'));
+      });
+    });
+
+    document.getElementById('reviews-form').addEventListener('click', function (event) {
+      if (event.target.classList.contains('admin-row__remove')) {
+        event.target.closest('.admin-row').remove();
+      }
+    });
+  })();
+</script>
+
+<%- include('partials/foot') %>

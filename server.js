@@ -9,7 +9,8 @@ const resourcesRouter = require('./src/routes/resources');
 const contactRouter = require('./src/routes/contact');
 const llmsRouter = require('./src/routes/llms');
 const adminRouter = require('./src/routes/admin');
-const site = require('./src/content/site.json');
+const reviewsRouter = require('./src/routes/reviews');
+const { getSite } = require('./src/services/content');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,12 +41,13 @@ app.use(session({
 app.use('/', indexRouter);
 app.use('/articles', articlesRouter);
 app.use('/resources', resourcesRouter);
+app.use('/reviews', reviewsRouter);
 app.use('/api/contact', contactRouter);
 app.use('/llms.txt', llmsRouter);
 app.use('/admin', adminRouter);
 
 app.use((req, res) => {
-  res.status(404).render('404', { site, pageDescription: 'This page could not be found.', noindex: true });
+  res.status(404).render('404', { site: getSite(), pageDescription: 'This page could not be found.', noindex: true });
 });
 
 app.use((err, req, res, next) => {

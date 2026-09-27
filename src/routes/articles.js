@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const articlesService = require('../services/articles');
-const site = require('../content/site.json');
+const { getSite } = require('../services/content');
 const { canonicalUrl } = require('../services/url');
 
 router.get('/', (req, res) => {
   res.render('articles-list', {
-    site,
+    site: getSite(),
     articles: articlesService.getAll(),
     pageDescription: 'Writing on aviation, flight training, and the path from aircraft mechanic to airline pilot.',
     canonicalUrl: canonicalUrl(req),
@@ -14,6 +14,7 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:slug', (req, res) => {
+  const site = getSite();
   const article = articlesService.getBySlug(req.params.slug);
   if (!article) {
     return res.status(404).render('404', { site, pageDescription: 'This page could not be found.', noindex: true });

@@ -1,0 +1,24 @@
+<%- include('partials/head', { site: site, pageTitle: 'Reviews', pageDescription: pageDescription, canonicalUrl: canonicalUrl, active: active }) %>
+
+<h1>Reviews</h1>
+<p class="resource-section__hint">What students have said after flying with me at Brazos Valley Flight Services.</p>
+
+<% if (reviews.length === 0) { %>
+  <p class="empty-state">Nothing here yet — check back soon.</p>
+<% } else { %>
+  <ul class="review-grid">
+    <% reviews.forEach(function(review) { %>
+      <li class="review-card tile">
+        <img class="review-card__screenshot" src="<%= review.screenshot %>" alt="Google review<% if (review.caption) { %> — <%= review.caption %><% } %>" loading="lazy">
+        <% if (review.photo) { %>
+          <img class="review-card__photo" src="<%= review.photo %>" alt="<%= review.caption || 'Photo with a student' %>" loading="lazy">
+        <% } %>
+        <% if (review.caption) { %>
+          <p class="review-card__caption"><%= review.caption %></p>
+        <% } %>
+      </li>
+    <% }); %>
+  </ul>
+<% } %>
+
+<%- include('partials/foot', { site: site }) %>

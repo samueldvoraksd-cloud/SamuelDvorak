@@ -23,6 +23,10 @@
       "href": "/resources"
     },
     {
+      "label": "Reviews",
+      "href": "/reviews"
+    },
+    {
       "label": "Contact",
       "href": "/#contact"
     }

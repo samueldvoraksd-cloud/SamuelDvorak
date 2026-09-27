@@ -11,28 +11,35 @@ const github = require('../services/github');
 
 const SITE_JSON_PATH = path.join(__dirname, '..', 'content', 'site.json');
 const RESOURCES_JSON_PATH = path.join(__dirname, '..', 'content', 'resources.json');
+const REVIEWS_JSON_PATH = path.join(__dirname, '..', 'content', 'reviews.json');
 const DOCUMENTS_DIR = path.join(__dirname, '..', 'public', 'documents');
+const REVIEW_IMAGES_DIR = path.join(__dirname, '..', 'public', 'images', 'reviews');
 const ARTICLES_DIR = path.join(__dirname, '..', 'content', 'articles');
 
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      fs.mkdirSync(DOCUMENTS_DIR, { recursive: true });
-      cb(null, DOCUMENTS_DIR);
-    },
-    filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase();
-      const base = path.basename(file.originalname, ext)
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '')
-        .slice(0, 60) || 'document';
-      cb(null, `${base}-${Date.now()}${ext}`);
-    },
-  }),
-  fileFilter: (req, file, cb) => cb(null, file.mimetype === 'application/pdf'),
-  limits: { fileSize: 20 * 1024 * 1024 },
-});
+function makeUpload(destDir, fileFilter) {
+  return multer({
+    storage: multer.diskStorage({
+      destination: (req, file, cb) => {
+        fs.mkdirSync(destDir, { recursive: true });
+        cb(null, destDir);
+      },
+      filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        const base = path.basename(file.originalname, ext)
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '')
+          .slice(0, 60) || 'file';
+        cb(null, `${base}-${Date.now()}${ext}`);
+      },
+    }),
+    fileFilter: (req, file, cb) => cb(null, fileFilter(file)),
+    limits: { fileSize: 20 * 1024 * 1024 },
+  });
+}
+
+const upload = makeUpload(DOCUMENTS_DIR, (file) => file.mimetype === 'application/pdf');
+const uploadImage = makeUpload(REVIEW_IMAGES_DIR, (file) => file.mimetype.startsWith('image/'));
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
@@ -83,16 +90,23 @@ function normalizeRows(rows, fields) {
     .filter((row) => fields.some((field) => row[field]));
 }
 
-// Deletes any /documents/* file that was referenced before saving but isn't
-// referenced by any row after saving, so replaced/removed uploads don't
-// accumulate as orphaned files on disk.
-function cleanupOrphanedDocuments(previousDocs, newDocs) {
-  const before = new Set((previousDocs || []).map((d) => d.file).filter(Boolean));
-  const after = new Set((newDocs || []).map((d) => d.file).filter(Boolean));
+// Deletes any file under `dir` that was referenced (in any of `fields`) by
+// the previous rows but isn't referenced by any row after saving, so
+// replaced/removed uploads don't accumulate as orphaned files on disk.
+function cleanupOrphanedFiles(previousItems, newItems, fields, dir, urlPrefix) {
+  const extract = (items) => {
+    const set = new Set();
+    (items || []).forEach((item) => {
+      fields.forEach((field) => { if (item[field]) set.add(item[field]); });
+    });
+    return set;
+  };
+  const before = extract(previousItems);
+  const after = extract(newItems);
   const removed = [];
   before.forEach((file) => {
-    if (after.has(file) || !file.startsWith('/documents/')) return;
-    const abs = path.join(DOCUMENTS_DIR, path.basename(file));
+    if (after.has(file) || !file.startsWith(urlPrefix)) return;
+    const abs = path.join(dir, path.basename(file));
     try {
       fs.unlinkSync(abs);
       removed.push(file);
@@ -127,6 +141,9 @@ async function publishAll() {
 
   await syncTextFile('src/content/site.json', SITE_JSON_PATH, 'Update home page content via admin');
   await syncTextFile('src/content/resources.json', RESOURCES_JSON_PATH, 'Update resources page via admin');
+  if (fs.existsSync(REVIEWS_JSON_PATH)) {
+    await syncTextFile('src/content/reviews.json', REVIEWS_JSON_PATH, 'Update reviews page via admin');
+  }
 
   const localArticles = fs.existsSync(ARTICLES_DIR)
     ? fs.readdirSync(ARTICLES_DIR).filter((f) => f.endsWith('.md'))
@@ -151,6 +168,18 @@ async function publishAll() {
     if (entry.type === 'file' && !localDocs.includes(entry.name)) {
       await github.deleteFile(`src/public/documents/${entry.name}`, `Remove document: ${entry.name}`);
       summary.deleted.push(`src/public/documents/${entry.name}`);
+    }
+  }
+
+  const localReviewImages = fs.existsSync(REVIEW_IMAGES_DIR) ? fs.readdirSync(REVIEW_IMAGES_DIR) : [];
+  const remoteReviewImages = await github.listDir('src/public/images/reviews');
+  for (const file of localReviewImages) {
+    await syncFile(`src/public/images/reviews/${file}`, path.join(REVIEW_IMAGES_DIR, file), `Add review image: ${file}`);
+  }
+  for (const entry of remoteReviewImages) {
+    if (entry.type === 'file' && !localReviewImages.includes(entry.name)) {
+      await github.deleteFile(`src/public/images/reviews/${entry.name}`, `Remove review image: ${entry.name}`);
+      summary.deleted.push(`src/public/images/reviews/${entry.name}`);
     }
   }
 
@@ -231,6 +260,7 @@ router.post('/publish', requireAuth, async (req, res) => {
 router.get('/', requireAuth, (req, res) => {
   res.render('admin/dashboard', {
     articleCount: articlesService.getAll().length,
+    reviewCount: fs.existsSync(REVIEWS_JSON_PATH) ? readJsonFile(REVIEWS_JSON_PATH).length : 0,
     githubConfigured: github.isConfigured(),
     publishResult: req.query.publishResult || null,
     csrfToken: csrf.getToken(req, res),
@@ -312,13 +342,49 @@ router.post('/resources', requireAuth, upload.any(), (req, res) => {
     linksDescription: (linksDescription || '').trim(),
     links: normalizeRows(links, ['title', 'description', 'url']),
   };
-  cleanupOrphanedDocuments(previous.documents, updated.documents);
+  cleanupOrphanedFiles(previous.documents, updated.documents, ['file'], DOCUMENTS_DIR, '/documents/');
   writeJsonFile(RESOURCES_JSON_PATH, updated);
 
   res.render('admin/resources-edit', {
     linksDescription: updated.linksDescription,
     documents: updated.documents,
     links: updated.links,
+    saved: true,
+    githubConfigured: github.isConfigured(),
+    csrfToken: csrf.getToken(req, res),
+  });
+});
+
+// --- Reviews ---
+
+router.get('/reviews', requireAuth, (req, res) => {
+  const reviews = fs.existsSync(REVIEWS_JSON_PATH) ? readJsonFile(REVIEWS_JSON_PATH) : [];
+  res.render('admin/reviews-edit', {
+    reviews,
+    saved: false,
+    githubConfigured: github.isConfigured(),
+    csrfToken: csrf.getToken(req, res),
+  });
+});
+
+router.post('/reviews', requireAuth, uploadImage.any(), (req, res) => {
+  if (!csrf.verifyToken(req)) return res.status(403).send('Session expired, please go back and try again.');
+  const { reviews } = req.body || {};
+
+  (req.files || []).forEach((file) => {
+    const match = file.fieldname.match(/^reviews\[(\d+)\]\[(screenshotUpload|photoUpload)\]$/);
+    if (!match || !reviews || !reviews[match[1]]) return;
+    const field = match[2] === 'screenshotUpload' ? 'screenshot' : 'photo';
+    reviews[match[1]][field] = `/images/reviews/${file.filename}`;
+  });
+
+  const previous = fs.existsSync(REVIEWS_JSON_PATH) ? readJsonFile(REVIEWS_JSON_PATH) : [];
+  const updated = normalizeRows(reviews, ['screenshot', 'photo', 'caption']);
+  cleanupOrphanedFiles(previous, updated, ['screenshot', 'photo'], REVIEW_IMAGES_DIR, '/images/reviews/');
+  writeJsonFile(REVIEWS_JSON_PATH, updated);
+
+  res.render('admin/reviews-edit', {
+    reviews: updated,
     saved: true,
     githubConfigured: github.isConfigured(),
     csrfToken: csrf.getToken(req, res),

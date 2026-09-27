@@ -46,11 +46,12 @@
       if (!event.target.classList.contains('js-clear-file')) return;
       const row = event.target.closest('.admin-row');
       if (!row) return;
-      const hiddenFile = row.querySelector('input[type="hidden"][name$="[file]"]');
-      if (hiddenFile) hiddenFile.value = '';
-      const currentLine = row.querySelector('[data-current-line]');
+      const field = event.target.dataset.targetField || 'file';
+      const hidden = row.querySelector('input[type="hidden"][name$="[' + field + ']"]');
+      if (hidden) hidden.value = '';
+      const currentLine = row.querySelector('[data-current-line="' + field + '"]');
       if (currentLine) currentLine.remove();
-      const dzLabel = row.querySelector('.admin-dropzone__label');
+      const dzLabel = row.querySelector('.admin-dropzone[data-field="' + field + '"] .admin-dropzone__label');
       if (dzLabel) dzLabel.textContent = event.target.dataset.defaultLabel || 'Drag a file here or click to browse';
     });
   </script>
