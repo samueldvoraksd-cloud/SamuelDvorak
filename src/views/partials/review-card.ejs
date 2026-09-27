@@ -2,9 +2,9 @@
   const withHandle = typeof locals.withHandle !== 'undefined' && locals.withHandle;
   const cardIndex = typeof locals.index !== 'undefined' ? locals.index : '';
 %>
-<li class="review-card tile<%= withHandle ? ' review-card--sortable' : '' %>"<% if (withHandle) { %> data-original-index="<%= cardIndex %>"<% } %>>
+<li class="review-card tile<%= withHandle ? ' review-card--sortable' : '' %>"<% if (withHandle) { %> data-original-index="<%= cardIndex %>" draggable="true"<% } %>>
   <% if (withHandle) { %>
-    <span class="review-card__handle" draggable="true" role="button" tabindex="0" aria-label="Drag to reorder">&#10303;</span>
+    <span class="review-card__handle" aria-hidden="true">&#10303; drag</span>
   <% } %>
   <% if (review.reviewerName) { %>
     <div class="review-card__header">

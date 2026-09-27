@@ -3,7 +3,7 @@
 <div class="admin-card">
   <p><a href="/admin/reviews">&larr; Back to reviews content</a></p>
   <h1>Reorder reviews</h1>
-  <p class="hint">This is exactly how the public reviews page looks. Drag a card by its <strong>⠿</strong> handle to move it &mdash; up/down within its own column &mdash; then click Save order.</p>
+  <p class="hint">This is exactly how the public reviews page looks. Drag any card anywhere &mdash; up, down, or across to the other column &mdash; then click Save order. Spacing stays consistent automatically; you're choosing each card's position, not its margins.</p>
 
   <% if (githubConfigured) { %>
     <p class="admin-notice">Saving here goes live immediately but only exists on this server until you click <strong>Publish changes</strong> (top of the page).</p>
@@ -17,10 +17,13 @@
 </div>
 
 <%
-  const textOnlyReviews = [];
-  const photoReviews = [];
+  // Falls back to the old photo/no-photo split for reviews saved before
+  // columns became a stored field.
+  const leftReviews = [];
+  const rightReviews = [];
   reviews.forEach(function (review, i) {
-    (review.photo ? photoReviews : textOnlyReviews).push({ review, index: i });
+    const column = review.column || (review.photo ? 'right' : 'left');
+    (column === 'right' ? rightReviews : leftReviews).push({ review, index: i });
   });
 %>
 
@@ -32,13 +35,13 @@
     <p class="empty-state">Nothing here yet &mdash; add reviews first.</p>
   <% } else { %>
     <div class="review-columns" id="review-columns">
-      <ul class="review-column review-column--text">
-        <% textOnlyReviews.forEach(function(item) { %>
+      <ul class="review-column review-column--left review-column--sortable" data-column="left">
+        <% leftReviews.forEach(function(item) { %>
           <%- include('../partials/review-card', { review: item.review, withHandle: true, index: item.index }) %>
         <% }); %>
       </ul>
-      <ul class="review-column review-column--photo">
-        <% photoReviews.forEach(function(item) { %>
+      <ul class="review-column review-column--right review-column--sortable" data-column="right">
+        <% rightReviews.forEach(function(item) { %>
           <%- include('../partials/review-card', { review: item.review, withHandle: true, index: item.index }) %>
         <% }); %>
       </ul>
@@ -58,9 +61,7 @@
     let draggingCard = null;
 
     columns.addEventListener('dragstart', function (event) {
-      const handle = event.target.closest('.review-card__handle');
-      if (!handle) return;
-      const card = handle.closest('.review-card');
+      const card = event.target.closest('.review-card');
       if (!card) return;
       draggingCard = card;
       event.dataTransfer.effectAllowed = 'move';
@@ -69,15 +70,22 @@
       requestAnimationFrame(function () { card.classList.add('is-dragging'); });
     });
 
+    // The card the cursor sits above, so the dragged card slots in before it.
+    // Returns null past the last card, which appends to the end.
+    function cardAfterCursor(column, y) {
+      return Array.from(column.querySelectorAll('.review-card:not(.is-dragging)'))
+        .find(function (card) {
+          const rect = card.getBoundingClientRect();
+          return y < rect.top + rect.height / 2;
+        }) || null;
+    }
+
     columns.addEventListener('dragover', function (event) {
       if (!draggingCard) return;
-      const card = event.target.closest('.review-card');
-      const container = draggingCard.parentElement;
-      if (!card || card === draggingCard || !container.contains(card)) return;
+      const column = event.target.closest('.review-column');
+      if (!column) return;
       event.preventDefault();
-      const rect = card.getBoundingClientRect();
-      const after = (event.clientY - rect.top) > rect.height / 2;
-      container.insertBefore(draggingCard, after ? card.nextSibling : card);
+      column.insertBefore(draggingCard, cardAfterCursor(column, event.clientY));
     });
 
     columns.addEventListener('dragend', function () {
@@ -88,9 +96,14 @@
     });
 
     document.getElementById('reorder-form').addEventListener('submit', function () {
-      const order = Array.from(columns.querySelectorAll('.review-card[data-original-index]'))
-        .map(function (card) { return Number(card.getAttribute('data-original-index')); });
-      document.getElementById('order-field').value = JSON.stringify(order);
+      const indicesIn = function (column) {
+        return Array.from(column.querySelectorAll('.review-card[data-original-index]'))
+          .map(function (card) { return Number(card.getAttribute('data-original-index')); });
+      };
+      document.getElementById('order-field').value = JSON.stringify({
+        left: indicesIn(columns.querySelector('[data-column="left"]')),
+        right: indicesIn(columns.querySelector('[data-column="right"]')),
+      });
     });
   })();
 </script>

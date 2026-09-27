@@ -4,21 +4,24 @@
 <p class="resource-section__hint">What students have said, and a few milestones along the way, from training at Brazos Valley Flight Services.</p>
 
 <%
-  const textOnlyReviews = reviews.filter(function(r) { return !r.photo; });
-  const photoReviews = reviews.filter(function(r) { return r.photo; });
+  // Falls back to the old photo/no-photo split for reviews saved before
+  // columns became a stored field.
+  const columnOf = function(r) { return r.column || (r.photo ? 'right' : 'left'); };
+  const leftReviews = reviews.filter(function(r) { return columnOf(r) === 'left'; });
+  const rightReviews = reviews.filter(function(r) { return columnOf(r) === 'right'; });
 %>
 
 <% if (reviews.length === 0) { %>
   <p class="empty-state">Nothing here yet — check back soon.</p>
 <% } else { %>
   <div class="review-columns">
-    <ul class="review-column review-column--text">
-      <% textOnlyReviews.forEach(function(review) { %>
+    <ul class="review-column review-column--left">
+      <% leftReviews.forEach(function(review) { %>
         <%- include('partials/review-card', { review: review }) %>
       <% }); %>
     </ul>
-    <ul class="review-column review-column--photo">
-      <% photoReviews.forEach(function(review) { %>
+    <ul class="review-column review-column--right">
+      <% rightReviews.forEach(function(review) { %>
         <%- include('partials/review-card', { review: review }) %>
       <% }); %>
     </ul>

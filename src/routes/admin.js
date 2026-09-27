@@ -77,7 +77,9 @@ function parseContactEmail(value) {
   return { user: user || '', domain: rest.join('@') || '' };
 }
 
-function normalizeRows(rows, fields) {
+// `carried` fields are preserved as-is but don't count towards a row being
+// non-empty, so a row holding only carried metadata is still dropped as blank.
+function normalizeRows(rows, fields, carried = []) {
   if (!rows) return [];
   const list = Array.isArray(rows) ? rows : Object.values(rows);
   return list
@@ -85,6 +87,7 @@ function normalizeRows(rows, fields) {
     .map((row) => {
       const clean = {};
       fields.forEach((field) => { clean[field] = String(row[field] || '').trim(); });
+      carried.forEach((field) => { if (row[field]) clean[field] = String(row[field]).trim(); });
       return clean;
     })
     .filter((row) => fields.some((field) => row[field]));
@@ -378,7 +381,7 @@ router.post('/reviews', requireAuth, uploadImage.any(), (req, res) => {
   });
 
   const previous = fs.existsSync(REVIEWS_JSON_PATH) ? readJsonFile(REVIEWS_JSON_PATH) : [];
-  const updated = normalizeRows(reviews, ['reviewerName', 'rating', 'reviewDate', 'text', 'photo', 'caption']);
+  const updated = normalizeRows(reviews, ['reviewerName', 'rating', 'reviewDate', 'text', 'photo', 'caption'], ['column']);
   cleanupOrphanedFiles(previous, updated, ['photo'], REVIEW_IMAGES_DIR, '/images/reviews/');
   writeJsonFile(REVIEWS_JSON_PATH, updated);
 
@@ -404,18 +407,24 @@ router.post('/reviews/order', requireAuth, (req, res) => {
   if (!csrf.verifyToken(req)) return res.status(403).send('Session expired, please go back and try again.');
   const reviews = fs.existsSync(REVIEWS_JSON_PATH) ? readJsonFile(REVIEWS_JSON_PATH) : [];
 
-  let order;
+  let payload;
   try {
-    order = JSON.parse(req.body.order || '[]');
+    payload = JSON.parse(req.body.order || 'null');
   } catch (e) {
-    order = [];
+    payload = null;
   }
-  const isValidOrder = Array.isArray(order)
-    && order.length === reviews.length
-    && order.every((n) => Number.isInteger(n) && n >= 0 && n < reviews.length)
-    && new Set(order).size === reviews.length;
+  const left = payload && Array.isArray(payload.left) ? payload.left : null;
+  const right = payload && Array.isArray(payload.right) ? payload.right : null;
+  const combined = left && right ? left.concat(right) : [];
+  const isValidOrder = left && right
+    && combined.length === reviews.length
+    && combined.every((n) => Number.isInteger(n) && n >= 0 && n < reviews.length)
+    && new Set(combined).size === reviews.length;
 
-  const updated = isValidOrder ? order.map((i) => reviews[i]) : reviews;
+  const updated = isValidOrder
+    ? left.map((i) => ({ ...reviews[i], column: 'left' }))
+      .concat(right.map((i) => ({ ...reviews[i], column: 'right' })))
+    : reviews;
   writeJsonFile(REVIEWS_JSON_PATH, updated);
 
   res.render('admin/reviews-order', {

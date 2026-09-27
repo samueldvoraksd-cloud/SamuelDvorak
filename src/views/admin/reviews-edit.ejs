@@ -24,6 +24,8 @@
         <div class="admin-row">
           <button type="button" class="admin-row__remove" aria-label="Remove review">&times;</button>
 
+          <input type="hidden" name="reviews[<%= i %>][column]" value="<%= review.column || (review.photo ? 'right' : 'left') %>">
+
           <label>Reviewer name</label>
           <input type="text" name="reviews[<%= i %>][reviewerName]" value="<%= review.reviewerName %>">
 
@@ -68,6 +70,8 @@
 <template id="review-row-template">
   <div class="admin-row">
     <button type="button" class="admin-row__remove" aria-label="Remove review">&times;</button>
+
+    <input type="hidden" name="reviews[__INDEX__][column]" value="left">
 
     <label>Reviewer name</label>
     <input type="text" name="reviews[__INDEX__][reviewerName]">
