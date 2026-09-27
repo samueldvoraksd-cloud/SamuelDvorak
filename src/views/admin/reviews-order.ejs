@@ -1,0 +1,103 @@
+<%- include('partials/head', { title: 'Reorder reviews', bodyClass: 'admin-wide' }) %>
+
+<div class="admin-card">
+  <p><a href="/admin/reviews">&larr; Back to reviews content</a></p>
+  <h1>Reorder reviews</h1>
+  <p class="hint">This is exactly how the public reviews page looks. Drag a card by its <strong>⠿</strong> handle to move it &mdash; up/down within its own column &mdash; then click Save order.</p>
+
+  <% if (githubConfigured) { %>
+    <p class="admin-notice">Saving here goes live immediately but only exists on this server until you click <strong>Publish changes</strong> (top of the page).</p>
+  <% } else { %>
+    <p class="admin-notice">GitHub sync isn't configured. Order changes here are saved to this server's disk only, which Render's free tier wipes on redeploy or after the site's been idle.</p>
+  <% } %>
+
+  <% if (saved) { %>
+    <p class="admin-message admin-message--success">Order saved.</p>
+  <% } %>
+</div>
+
+<%
+  const textOnlyReviews = [];
+  const photoReviews = [];
+  reviews.forEach(function (review, i) {
+    (review.photo ? photoReviews : textOnlyReviews).push({ review, index: i });
+  });
+%>
+
+<form method="post" action="/admin/reviews/order" id="reorder-form">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+  <input type="hidden" name="order" id="order-field" value="">
+
+  <% if (reviews.length === 0) { %>
+    <p class="empty-state">Nothing here yet &mdash; add reviews first.</p>
+  <% } else { %>
+    <div class="review-columns" id="review-columns">
+      <ul class="review-column review-column--text">
+        <% textOnlyReviews.forEach(function(item) { %>
+          <%- include('../partials/review-card', { review: item.review, withHandle: true, index: item.index }) %>
+        <% }); %>
+      </ul>
+      <ul class="review-column review-column--photo">
+        <% photoReviews.forEach(function(item) { %>
+          <%- include('../partials/review-card', { review: item.review, withHandle: true, index: item.index }) %>
+        <% }); %>
+      </ul>
+    </div>
+  <% } %>
+
+  <div class="admin-card">
+    <button type="submit" class="admin-btn">Save order</button>
+  </div>
+</form>
+
+<script>
+  (function () {
+    const columns = document.getElementById('review-columns');
+    if (!columns) return;
+
+    let draggingCard = null;
+
+    columns.addEventListener('mousedown', function (event) {
+      const handle = event.target.closest('.review-card__handle');
+      if (!handle) return;
+      const card = handle.closest('.review-card');
+      if (card) card.setAttribute('draggable', 'true');
+    });
+
+    columns.addEventListener('dragstart', function (event) {
+      const card = event.target.closest('.review-card');
+      if (!card || card.getAttribute('draggable') !== 'true') return;
+      draggingCard = card;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', '');
+      requestAnimationFrame(function () { card.classList.add('is-dragging'); });
+    });
+
+    columns.addEventListener('dragover', function (event) {
+      if (!draggingCard) return;
+      const card = event.target.closest('.review-card');
+      const container = draggingCard.parentElement;
+      if (!card || card === draggingCard || !container.contains(card)) return;
+      event.preventDefault();
+      const rect = card.getBoundingClientRect();
+      const after = (event.clientY - rect.top) > rect.height / 2;
+      container.insertBefore(draggingCard, after ? card.nextSibling : card);
+    });
+
+    columns.addEventListener('dragend', function () {
+      if (draggingCard) {
+        draggingCard.removeAttribute('draggable');
+        draggingCard.classList.remove('is-dragging');
+      }
+      draggingCard = null;
+    });
+
+    document.getElementById('reorder-form').addEventListener('submit', function () {
+      const order = Array.from(columns.querySelectorAll('.review-card[data-original-index]'))
+        .map(function (card) { return Number(card.getAttribute('data-original-index')); });
+      document.getElementById('order-field').value = JSON.stringify(order);
+    });
+  })();
+</script>
+
+<%- include('partials/foot') %>

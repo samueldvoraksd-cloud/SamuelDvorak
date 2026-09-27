@@ -4,6 +4,10 @@
   padding: var(--space-4) var(--space-3) var(--space-6);
 }
 
+body.admin-wide .admin-shell {
+  max-width: var(--max-width);
+}
+
 .admin-nav {
   display: flex;
   flex-wrap: wrap;
@@ -232,38 +236,6 @@
   border-radius: var(--radius-sm);
   padding: var(--space-2);
   margin-bottom: var(--space-2);
-}
-
-.admin-row--sortable {
-  padding-left: 44px;
-}
-
-.admin-row.is-dragging {
-  opacity: 0.4;
-}
-
-.admin-row__handle {
-  position: absolute;
-  top: var(--space-1);
-  left: var(--space-1);
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-foreground-soft);
-  border-radius: var(--radius-sm);
-  width: 28px;
-  height: 28px;
-  line-height: 1;
-  font-size: 1rem;
-  cursor: grab;
-}
-
-.admin-row__handle:hover {
-  border-color: var(--color-accent);
-  color: var(--color-foreground-soft);
-}
-
-.admin-row__handle:active {
-  cursor: grabbing;
 }
 
 .admin-row__remove {

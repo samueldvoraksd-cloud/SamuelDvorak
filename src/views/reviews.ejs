@@ -4,41 +4,6 @@
 <p class="resource-section__hint">What students have said, and a few milestones along the way, from training at Brazos Valley Flight Services.</p>
 
 <%
-  function initials(name) {
-    return name.split(' ').map(function(p) { return p[0]; }).join('').slice(0, 2).toUpperCase();
-  }
-  function stars(rating) {
-    return '★★★★★☆☆☆☆☆'.slice(5 - rating, 10 - rating);
-  }
-%>
-
-<%
-  function escapeHtml(str) {
-    return String(str).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-  function renderCard(review) {
-    let html = '<li class="review-card tile">';
-    if (review.reviewerName) {
-      html += '<div class="review-card__header"><div class="review-card__avatar">' + escapeHtml(initials(review.reviewerName)) + '</div><div>'
-        + '<p class="review-card__name">' + escapeHtml(review.reviewerName) + '</p>'
-        + '<p class="review-card__meta"><span class="review-card__stars">' + stars(review.rating) + '</span> ' + escapeHtml(review.reviewDate) + '</p>'
-        + '</div></div>';
-    }
-    if (review.text) {
-      html += '<p class="review-card__text">' + escapeHtml(review.text) + '</p>';
-    }
-    if (review.photo) {
-      const alt = review.caption || (review.reviewerName ? review.reviewerName + ' with Samuel' : 'Student photo');
-      html += '<img class="review-card__photo-img" src="' + escapeHtml(review.photo) + '" alt="' + escapeHtml(alt) + '" loading="lazy">';
-    }
-    if (review.caption) {
-      html += '<p class="review-card__caption">' + escapeHtml(review.caption) + '</p>';
-    }
-    html += '</li>';
-    return html;
-  }
   const textOnlyReviews = reviews.filter(function(r) { return !r.photo; });
   const photoReviews = reviews.filter(function(r) { return r.photo; });
 %>
@@ -48,10 +13,14 @@
 <% } else { %>
   <div class="review-columns">
     <ul class="review-column review-column--text">
-      <%- textOnlyReviews.map(renderCard).join('') %>
+      <% textOnlyReviews.forEach(function(review) { %>
+        <%- include('partials/review-card', { review: review }) %>
+      <% }); %>
     </ul>
     <ul class="review-column review-column--photo">
-      <%- photoReviews.map(renderCard).join('') %>
+      <% photoReviews.forEach(function(review) { %>
+        <%- include('partials/review-card', { review: review }) %>
+      <% }); %>
     </ul>
   </div>
 <% } %>

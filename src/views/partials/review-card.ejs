@@ -1,0 +1,27 @@
+<%
+  const withHandle = typeof locals.withHandle !== 'undefined' && locals.withHandle;
+  const cardIndex = typeof locals.index !== 'undefined' ? locals.index : '';
+%>
+<li class="review-card tile<%= withHandle ? ' review-card--sortable' : '' %>"<% if (withHandle) { %> data-original-index="<%= cardIndex %>"<% } %>>
+  <% if (withHandle) { %>
+    <button type="button" class="review-card__handle" aria-label="Drag to reorder">&#10303;</button>
+  <% } %>
+  <% if (review.reviewerName) { %>
+    <div class="review-card__header">
+      <div class="review-card__avatar"><%= initials(review.reviewerName) %></div>
+      <div>
+        <p class="review-card__name"><%= review.reviewerName %></p>
+        <p class="review-card__meta"><span class="review-card__stars"><%= stars(review.rating) %></span> <%= review.reviewDate %></p>
+      </div>
+    </div>
+  <% } %>
+  <% if (review.text) { %>
+    <p class="review-card__text"><%= review.text %></p>
+  <% } %>
+  <% if (review.photo) { %>
+    <img class="review-card__photo-img" src="<%= review.photo %>" alt="<%= review.caption || (review.reviewerName ? review.reviewerName + ' with Samuel' : 'Student photo') %>" loading="lazy">
+  <% } %>
+  <% if (review.caption) { %>
+    <p class="review-card__caption"><%= review.caption %></p>
+  <% } %>
+</li>

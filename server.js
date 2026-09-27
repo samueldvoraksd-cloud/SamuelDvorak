@@ -11,6 +11,7 @@ const llmsRouter = require('./src/routes/llms');
 const adminRouter = require('./src/routes/admin');
 const reviewsRouter = require('./src/routes/reviews');
 const { getSite } = require('./src/services/content');
+const { initials, stars } = require('./src/utils/reviewHelpers');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,6 +28,8 @@ app.set('trust proxy', 1);
 // forces browsers to fetch the new file instead of serving a stale cached
 // copy — the exact class of bug that made a fixed dropzone look broken.
 app.locals.assetVersion = Date.now();
+app.locals.initials = initials;
+app.locals.stars = stars;
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

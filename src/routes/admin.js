@@ -390,6 +390,42 @@ router.post('/reviews', requireAuth, uploadImage.any(), (req, res) => {
   });
 });
 
+router.get('/reviews/order', requireAuth, (req, res) => {
+  const reviews = fs.existsSync(REVIEWS_JSON_PATH) ? readJsonFile(REVIEWS_JSON_PATH) : [];
+  res.render('admin/reviews-order', {
+    reviews,
+    saved: false,
+    githubConfigured: github.isConfigured(),
+    csrfToken: csrf.getToken(req, res),
+  });
+});
+
+router.post('/reviews/order', requireAuth, (req, res) => {
+  if (!csrf.verifyToken(req)) return res.status(403).send('Session expired, please go back and try again.');
+  const reviews = fs.existsSync(REVIEWS_JSON_PATH) ? readJsonFile(REVIEWS_JSON_PATH) : [];
+
+  let order;
+  try {
+    order = JSON.parse(req.body.order || '[]');
+  } catch (e) {
+    order = [];
+  }
+  const isValidOrder = Array.isArray(order)
+    && order.length === reviews.length
+    && order.every((n) => Number.isInteger(n) && n >= 0 && n < reviews.length)
+    && new Set(order).size === reviews.length;
+
+  const updated = isValidOrder ? order.map((i) => reviews[i]) : reviews;
+  writeJsonFile(REVIEWS_JSON_PATH, updated);
+
+  res.render('admin/reviews-order', {
+    reviews: updated,
+    saved: isValidOrder,
+    githubConfigured: github.isConfigured(),
+    csrfToken: csrf.getToken(req, res),
+  });
+});
+
 // --- Articles ---
 
 router.get('/articles', requireAuth, (req, res) => {

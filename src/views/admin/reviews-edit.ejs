@@ -14,15 +14,14 @@
     <p class="admin-message admin-message--success">Saved.</p>
   <% } %>
 
-  <p class="hint">Drag a card by its <strong>⠿</strong> handle to change the order reviews appear in on the public page.</p>
+  <p class="hint">Want to change the order reviews appear in? Use <a href="/admin/reviews/order">Reorder reviews</a> instead.</p>
 
   <form method="post" action="/admin/reviews" class="admin-form" id="reviews-form" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
     <div id="reviews-rows">
       <% reviews.forEach(function(review, i) { %>
-        <div class="admin-row admin-row--sortable">
-          <button type="button" class="admin-row__handle" aria-label="Drag to reorder">&#10303;</button>
+        <div class="admin-row">
           <button type="button" class="admin-row__remove" aria-label="Remove review">&times;</button>
 
           <label>Reviewer name</label>
@@ -67,8 +66,7 @@
 </div>
 
 <template id="review-row-template">
-  <div class="admin-row admin-row--sortable">
-    <button type="button" class="admin-row__handle" aria-label="Drag to reorder">&#10303;</button>
+  <div class="admin-row">
     <button type="button" class="admin-row__remove" aria-label="Remove review">&times;</button>
 
     <label>Reviewer name</label>
@@ -122,52 +120,6 @@
       if (event.target.classList.contains('admin-row__remove')) {
         event.target.closest('.admin-row').remove();
       }
-    });
-
-    function renumberReviewRows() {
-      document.querySelectorAll('#reviews-rows .admin-row').forEach(function (row, idx) {
-        row.querySelectorAll('[name]').forEach(function (el) {
-          el.name = el.name.replace(/^reviews\[\d+\]/, 'reviews[' + idx + ']');
-        });
-      });
-    }
-
-    let draggingRow = null;
-
-    document.getElementById('reviews-rows').addEventListener('mousedown', function (event) {
-      const handle = event.target.closest('.admin-row__handle');
-      if (!handle) return;
-      const row = handle.closest('.admin-row');
-      if (row) row.setAttribute('draggable', 'true');
-    });
-
-    document.getElementById('reviews-rows').addEventListener('dragstart', function (event) {
-      const row = event.target.closest('.admin-row');
-      if (!row || row.getAttribute('draggable') !== 'true') return;
-      draggingRow = row;
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', '');
-      requestAnimationFrame(function () { row.classList.add('is-dragging'); });
-    });
-
-    document.getElementById('reviews-rows').addEventListener('dragover', function (event) {
-      if (!draggingRow) return;
-      const row = event.target.closest('.admin-row');
-      const container = document.getElementById('reviews-rows');
-      if (!row || row === draggingRow || !container.contains(row)) return;
-      event.preventDefault();
-      const rect = row.getBoundingClientRect();
-      const after = (event.clientY - rect.top) > rect.height / 2;
-      container.insertBefore(draggingRow, after ? row.nextSibling : row);
-    });
-
-    document.getElementById('reviews-rows').addEventListener('dragend', function () {
-      if (draggingRow) {
-        draggingRow.removeAttribute('draggable');
-        draggingRow.classList.remove('is-dragging');
-        renumberReviewRows();
-      }
-      draggingRow = null;
     });
   })();
 </script>
