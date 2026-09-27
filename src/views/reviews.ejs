@@ -3,24 +3,42 @@
 <h1>Reviews</h1>
 <p class="resource-section__hint">What students have said, and a few milestones along the way, from training at Brazos Valley Flight Services.</p>
 
+<%
+  const reviewItems = reviews.filter(function(r) { return r.screenshot; });
+  const photoItems = reviews.filter(function(r) { return r.photo; });
+%>
+
 <% if (reviews.length === 0) { %>
   <p class="empty-state">Nothing here yet — check back soon.</p>
 <% } else { %>
-  <ul class="review-grid">
-    <% reviews.forEach(function(review) { %>
-      <li class="review-card tile">
-        <% if (review.screenshot) { %>
-          <img class="review-card__screenshot" src="<%= review.screenshot %>" alt="Google review<% if (review.caption) { %> — <%= review.caption %><% } %>" loading="lazy">
-        <% } %>
-        <% if (review.photo) { %>
-          <img class="review-card__photo" src="<%= review.photo %>" alt="<%= review.caption || 'Photo with a student' %>" loading="lazy">
-        <% } %>
-        <% if (review.caption) { %>
-          <p class="review-card__caption"><%= review.caption %></p>
-        <% } %>
-      </li>
-    <% }); %>
-  </ul>
+  <% if (reviewItems.length > 0) { %>
+    <section aria-labelledby="reviews-heading">
+      <h2 id="reviews-heading">What Students Say</h2>
+      <ul class="review-grid">
+        <% reviewItems.forEach(function(review) { %>
+          <li class="review-card tile">
+            <img class="review-card__screenshot" src="<%= review.screenshot %>" alt="Google review<% if (review.caption) { %> — <%= review.caption %><% } %>" loading="lazy">
+          </li>
+        <% }); %>
+      </ul>
+    </section>
+  <% } %>
+
+  <% if (photoItems.length > 0) { %>
+    <section aria-labelledby="photos-heading">
+      <h2 id="photos-heading">Photos</h2>
+      <ul class="photo-grid">
+        <% photoItems.forEach(function(review) { %>
+          <li class="photo-card tile">
+            <img src="<%= review.photo %>" alt="<%= review.caption || 'Photo with a student' %>" loading="lazy">
+            <% if (review.caption) { %>
+              <p class="review-card__caption"><%= review.caption %></p>
+            <% } %>
+          </li>
+        <% }); %>
+      </ul>
+    </section>
+  <% } %>
 <% } %>
 
 <%- include('partials/foot', { site: site }) %>
