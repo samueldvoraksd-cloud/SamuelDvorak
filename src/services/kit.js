@@ -45,8 +45,12 @@ async function subscribe(email) {
   }
 }
 
-// Always a draft: send_at stays null so the actual send happens from Kit's UI.
-async function createBroadcastDraft({ subject, content, description }) {
+// Scheduling a minute out rather than immediately, so a send that was a
+// mistake can still be stopped from Kit before it goes anywhere.
+const SEND_DELAY_MS = 60 * 1000;
+
+// send_at null leaves it as a draft for review in Kit; a timestamp schedules it.
+async function createBroadcast({ subject, content, description, sendNow }) {
   const { apiKey, tagId } = config();
   if (!apiKey) return { ok: false, reason: 'not_configured' };
 
@@ -56,7 +60,7 @@ async function createBroadcastDraft({ subject, content, description }) {
       content,
       description: description || subject,
       public: false,
-      send_at: null,
+      send_at: sendNow ? new Date(Date.now() + SEND_DELAY_MS).toISOString() : null,
       subscriber_filter: tagId
         ? [{ all: [{ type: 'tag', ids: [Number(tagId)] }] }]
         : [],
@@ -64,8 +68,8 @@ async function createBroadcastDraft({ subject, content, description }) {
     return { ok: true, broadcast: result.broadcast };
   } catch (err) {
     console.error(err);
-    return { ok: false, reason: 'draft_failed' };
+    return { ok: false, reason: 'broadcast_failed' };
   }
 }
 
-module.exports = { isConfigured, subscribe, createBroadcastDraft };
+module.exports = { isConfigured, subscribe, createBroadcast };

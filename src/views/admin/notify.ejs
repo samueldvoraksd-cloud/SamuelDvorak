@@ -14,9 +14,14 @@
     <p class="admin-message admin-message--error"><%= error %></p>
   <% } %>
 
-  <% if (sent) { %>
+  <% if (sent && sentNow) { %>
     <p class="admin-message admin-message--success">
-      Draft created in Kit: <strong><%= sent.subject %></strong>.
+      <strong><%= sent.subject %></strong> is scheduled and goes out in about a minute.
+      <a href="https://app.kit.com/campaigns" target="_blank" rel="noopener">Open Kit &rarr;</a> if you need to stop it.
+    </p>
+  <% } else if (sent) { %>
+    <p class="admin-message admin-message--success">
+      Draft saved in Kit: <strong><%= sent.subject %></strong>.
       <a href="https://app.kit.com/campaigns" target="_blank" rel="noopener">Open Kit to review and send &rarr;</a>
     </p>
   <% } %>
@@ -44,7 +49,11 @@
     <label for="notify-body">Message</label>
     <textarea id="notify-body" name="body" rows="10"></textarea>
 
-    <p><button type="submit" class="admin-btn">Create draft in Kit</button></p>
+    <p class="notify-actions">
+      <button type="submit" name="action" value="draft" class="admin-btn admin-btn--secondary">Create draft in Kit</button>
+      <button type="submit" name="action" value="send" class="admin-btn" id="notify-send">Send now</button>
+    </p>
+    <p class="hint">"Create draft" saves it in Kit for you to review and send. "Send now" schedules it a minute out &mdash; enough to stop it in Kit if you spot something, then it's gone for good.</p>
   </form>
 </div>
 
@@ -53,6 +62,12 @@
     const select = document.getElementById('notify-item');
     const subject = document.getElementById('notify-subject');
     const body = document.getElementById('notify-body');
+
+    document.getElementById('notify-send').addEventListener('click', function (event) {
+      if (!window.confirm('This emails your subscribers in about a minute and can\'t be undone once it goes. Send it?')) {
+        event.preventDefault();
+      }
+    });
 
     select.addEventListener('change', function () {
       const option = select.selectedOptions[0];

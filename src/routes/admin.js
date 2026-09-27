@@ -495,16 +495,17 @@ router.post('/notify', requireAuth, async (req, res) => {
     .map((paragraph) => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
     .join('\n');
 
-  const result = await kit.createBroadcastDraft({ subject, content });
+  const sendNow = req.body.action === 'send';
+  const result = await kit.createBroadcast({ subject, content, sendNow });
   if (!result.ok) {
     return renderNotify(req, res, {
       error: result.reason === 'not_configured'
         ? 'Kit isn\'t connected yet — add KIT_API_KEY in Render first.'
-        : 'Kit rejected the draft. Check the server logs for details.',
+        : 'Kit rejected it. Check the server logs for details.',
     });
   }
 
-  renderNotify(req, res, { sent: result.broadcast });
+  renderNotify(req, res, { sent: result.broadcast, sentNow: sendNow });
 });
 
 // --- Articles ---
