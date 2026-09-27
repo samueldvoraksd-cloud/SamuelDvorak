@@ -22,6 +22,11 @@ if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src', 'views'));
 app.set('trust proxy', 1);
+
+// Cache-busts static CSS/JS links (see partials/head.ejs) so a deploy always
+// forces browsers to fetch the new file instead of serving a stale cached
+// copy — the exact class of bug that made a fixed dropzone look broken.
+app.locals.assetVersion = Date.now();
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
