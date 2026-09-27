@@ -22,19 +22,21 @@
         <div class="admin-row">
           <button type="button" class="admin-row__remove" aria-label="Remove review">&times;</button>
 
-          <label>Review screenshot</label>
-          <input type="hidden" name="reviews[<%= i %>][screenshot]" value="<%= review.screenshot %>">
-          <% if (review.screenshot) { %>
-            <p class="admin-dropzone__current" data-current-line="screenshot">
-              Current: <a href="<%= review.screenshot %>" target="_blank" rel="noopener"><%= review.screenshot.split('/').pop() %></a>
-              &mdash;
-              <button type="button" class="js-clear-file" data-target-field="screenshot" data-default-label="Drag a screenshot here or click to browse">Remove</button>
-            </p>
-          <% } %>
-          <div class="admin-dropzone" data-field="screenshot">
-            <input type="file" accept="image/*" name="reviews[<%= i %>][screenshotUpload]">
-            <span class="admin-dropzone__label"><%= review.screenshot ? 'Drag a new screenshot here to replace, or click to browse' : 'Drag a screenshot here or click to browse' %></span>
-          </div>
+          <label>Reviewer name</label>
+          <input type="text" name="reviews[<%= i %>][reviewerName]" value="<%= review.reviewerName %>">
+
+          <label>Rating (1&ndash;5)</label>
+          <select name="reviews[<%= i %>][rating]">
+            <% for (let r = 5; r >= 1; r--) { %>
+              <option value="<%= r %>" <%= String(review.rating) === String(r) ? 'selected' : '' %>><%= r %> star<%= r === 1 ? '' : 's' %></option>
+            <% } %>
+          </select>
+
+          <label>Date shown (e.g. "September 2026")</label>
+          <input type="text" name="reviews[<%= i %>][reviewDate]" value="<%= review.reviewDate %>">
+
+          <label>Review text</label>
+          <textarea class="admin-autosize" rows="2" name="reviews[<%= i %>][text]"><%= review.text %></textarea>
 
           <label>Photo (optional)</label>
           <input type="hidden" name="reviews[<%= i %>][photo]" value="<%= review.photo %>">
@@ -65,12 +67,23 @@
   <div class="admin-row">
     <button type="button" class="admin-row__remove" aria-label="Remove review">&times;</button>
 
-    <label>Review screenshot</label>
-    <input type="hidden" name="reviews[__INDEX__][screenshot]" value="">
-    <div class="admin-dropzone" data-field="screenshot">
-      <input type="file" accept="image/*" name="reviews[__INDEX__][screenshotUpload]">
-      <span class="admin-dropzone__label">Drag a screenshot here or click to browse</span>
-    </div>
+    <label>Reviewer name</label>
+    <input type="text" name="reviews[__INDEX__][reviewerName]">
+
+    <label>Rating (1&ndash;5)</label>
+    <select name="reviews[__INDEX__][rating]">
+      <option value="5" selected>5 stars</option>
+      <option value="4">4 stars</option>
+      <option value="3">3 stars</option>
+      <option value="2">2 stars</option>
+      <option value="1">1 star</option>
+    </select>
+
+    <label>Date shown (e.g. "September 2026")</label>
+    <input type="text" name="reviews[__INDEX__][reviewDate]">
+
+    <label>Review text</label>
+    <textarea class="admin-autosize" rows="2" name="reviews[__INDEX__][text]"></textarea>
 
     <label>Photo (optional)</label>
     <input type="hidden" name="reviews[__INDEX__][photo]" value="">

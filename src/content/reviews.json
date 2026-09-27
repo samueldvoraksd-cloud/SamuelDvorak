@@ -1,27 +1,50 @@
 [
   {
-    "screenshot": "/images/reviews/kumail-qazilbash-review.png",
+    "reviewerName": "Kumail Qazilbash",
+    "rating": 5,
+    "reviewDate": "September 2026",
+    "text": "Sam D. is a great instructor at Brazos Valley Flight Services. He's very straightforward, realistic, and doesn't sugarcoat anything, which I really appreciate as a student pilot. He's especially great for students who are serious and committed to becoming better pilots. Sam has helped me a lot throughout my training, and I'm grateful for the time and guidance he's given me. Highly recommend him to anyone looking for an honest and knowledgeable instructor.",
     "photo": "/images/reviews/kumail-qazilbash-solo.jpg",
     "caption": "Kumail on his first solo"
   },
   {
-    "screenshot": "/images/reviews/chase-mann-review.png",
+    "reviewerName": "Chase Mann",
+    "rating": 5,
+    "reviewDate": "June 2026",
+    "text": "Had a checkout flight with Samuel Dvorak. I called about availability and they had me in a plane within a couple hours. Great dude, very knowledgeable and friendly. 10/10 would recommend",
     "photo": "",
     "caption": ""
   },
   {
-    "screenshot": "",
+    "reviewerName": "Cuatro Smart",
+    "rating": 5,
+    "reviewDate": "September 2026",
+    "text": "Sam Dvorak has been an excellent CFI throughout the process of attaining my PPL. He's got a wellspring of knowledge regarding all the aircraft's at BVFS due to previous mechanical work. Not to mention, his ability to teach is superb; he's extremely patient and very encouraging! I highly recommend y'all to ask for Sam if you want to have an amazing journey in attempting to get any license, certification, or simply want an amazing flight experience.",
+    "photo": "/images/reviews/john-smart-solo.jpg",
+    "caption": "Cuatro Smart's solo flight"
+  },
+  {
+    "reviewerName": "",
+    "rating": 0,
+    "reviewDate": "",
+    "text": "",
     "photo": "/images/reviews/gabriel-tacheny-solo.jpg",
     "caption": "Gabriel Tacheny's first solo"
   },
   {
-    "screenshot": "",
+    "reviewerName": "",
+    "rating": 0,
+    "reviewDate": "",
+    "text": "",
     "photo": "/images/reviews/ajay-gundanna-checkride.jpg",
     "caption": "Ajay Gundanna passing his private pilot checkride"
   },
   {
-    "screenshot": "",
-    "photo": "/images/reviews/john-smart-solo.jpg",
-    "caption": "John Smart's solo flight"
+    "reviewerName": "",
+    "rating": 0,
+    "reviewDate": "",
+    "text": "",
+    "photo": "/images/reviews/img-3998-1790475896404.jpeg",
+    "caption": "Adrian's first solo"
   }
 ]

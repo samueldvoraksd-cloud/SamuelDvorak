@@ -372,15 +372,14 @@ router.post('/reviews', requireAuth, uploadImage.any(), (req, res) => {
   const { reviews } = req.body || {};
 
   (req.files || []).forEach((file) => {
-    const match = file.fieldname.match(/^reviews\[(\d+)\]\[(screenshotUpload|photoUpload)\]$/);
+    const match = file.fieldname.match(/^reviews\[(\d+)\]\[photoUpload\]$/);
     if (!match || !reviews || !reviews[match[1]]) return;
-    const field = match[2] === 'screenshotUpload' ? 'screenshot' : 'photo';
-    reviews[match[1]][field] = `/images/reviews/${file.filename}`;
+    reviews[match[1]].photo = `/images/reviews/${file.filename}`;
   });
 
   const previous = fs.existsSync(REVIEWS_JSON_PATH) ? readJsonFile(REVIEWS_JSON_PATH) : [];
-  const updated = normalizeRows(reviews, ['screenshot', 'photo', 'caption']);
-  cleanupOrphanedFiles(previous, updated, ['screenshot', 'photo'], REVIEW_IMAGES_DIR, '/images/reviews/');
+  const updated = normalizeRows(reviews, ['reviewerName', 'rating', 'reviewDate', 'text', 'photo', 'caption']);
+  cleanupOrphanedFiles(previous, updated, ['photo'], REVIEW_IMAGES_DIR, '/images/reviews/');
   writeJsonFile(REVIEWS_JSON_PATH, updated);
 
   res.render('admin/reviews-edit', {
