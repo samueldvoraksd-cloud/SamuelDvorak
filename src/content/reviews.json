@@ -8,14 +8,6 @@
     "caption": "Kumail on his first solo"
   },
   {
-    "reviewerName": "Chase Mann",
-    "rating": 5,
-    "reviewDate": "June 2026",
-    "text": "Had a checkout flight with Samuel Dvorak. I called about availability and they had me in a plane within a couple hours. Great dude, very knowledgeable and friendly. 10/10 would recommend",
-    "photo": "",
-    "caption": ""
-  },
-  {
     "reviewerName": "Cuatro Smart",
     "rating": 5,
     "reviewDate": "September 2026",
@@ -45,6 +37,14 @@
     "reviewDate": "",
     "text": "My first solo",
     "photo": "/images/reviews/img-3998-1790475896404.jpeg",
+    "caption": ""
+  },
+  {
+    "reviewerName": "Chase Mann",
+    "rating": 5,
+    "reviewDate": "June 2026",
+    "text": "Had a checkout flight with Samuel Dvorak. I called about availability and they had me in a plane within a couple hours. Great dude, very knowledgeable and friendly. 10/10 would recommend",
+    "photo": "",
     "caption": ""
   },
   {
