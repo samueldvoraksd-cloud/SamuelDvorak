@@ -14,13 +14,9 @@
       const label = zone.querySelector('.admin-dropzone__label');
       if (!input) return;
 
-      // zone is a plain <div>, not a <label> — deliberately, so there's
-      // exactly one way this opens the picker (this handler) instead of
-      // racing against a <label>'s native click-forwarding behavior.
-      zone.addEventListener('click', function () {
-        input.click();
-      });
-
+      // The file input is a full-size, opacity:0 overlay covering the whole
+      // zone (see admin.css), so a real click already lands directly on it —
+      // no JS needed to open the picker, no forwarding to get wrong.
       input.addEventListener('change', function () {
         if (input.files[0] && label) label.textContent = input.files[0].name;
       });
