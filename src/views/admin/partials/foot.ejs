@@ -18,6 +18,7 @@
       // zone (see admin.css), so a real click already lands directly on it —
       // no JS needed to open the picker, no forwarding to get wrong.
       input.addEventListener('change', function () {
+        alert('DEBUG: change event fired. Files selected: ' + input.files.length + (input.files[0] ? (' — ' + input.files[0].name) : ''));
         if (input.files[0] && label) label.textContent = input.files[0].name;
       });
 
