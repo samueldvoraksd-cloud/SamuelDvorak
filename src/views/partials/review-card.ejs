@@ -4,7 +4,7 @@
 %>
 <li class="review-card tile<%= withHandle ? ' review-card--sortable' : '' %>"<% if (withHandle) { %> data-original-index="<%= cardIndex %>"<% } %>>
   <% if (withHandle) { %>
-    <button type="button" class="review-card__handle" aria-label="Drag to reorder">&#10303;</button>
+    <span class="review-card__handle" draggable="true" role="button" tabindex="0" aria-label="Drag to reorder">&#10303;</span>
   <% } %>
   <% if (review.reviewerName) { %>
     <div class="review-card__header">
@@ -19,7 +19,7 @@
     <p class="review-card__text"><%= review.text %></p>
   <% } %>
   <% if (review.photo) { %>
-    <img class="review-card__photo-img" src="<%= review.photo %>" alt="<%= review.caption || (review.reviewerName ? review.reviewerName + ' with Samuel' : 'Student photo') %>" loading="lazy">
+    <img class="review-card__photo-img" src="<%= review.photo %>" alt="<%= review.caption || (review.reviewerName ? review.reviewerName + ' with Samuel' : 'Student photo') %>" loading="lazy"<% if (withHandle) { %> draggable="false"<% } %>>
   <% } %>
   <% if (review.caption) { %>
     <p class="review-card__caption"><%= review.caption %></p>

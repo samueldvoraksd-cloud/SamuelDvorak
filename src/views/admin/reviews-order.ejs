@@ -57,19 +57,15 @@
 
     let draggingCard = null;
 
-    columns.addEventListener('mousedown', function (event) {
+    columns.addEventListener('dragstart', function (event) {
       const handle = event.target.closest('.review-card__handle');
       if (!handle) return;
       const card = handle.closest('.review-card');
-      if (card) card.setAttribute('draggable', 'true');
-    });
-
-    columns.addEventListener('dragstart', function (event) {
-      const card = event.target.closest('.review-card');
-      if (!card || card.getAttribute('draggable') !== 'true') return;
+      if (!card) return;
       draggingCard = card;
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', '');
+      event.dataTransfer.setDragImage(card, 20, 20);
       requestAnimationFrame(function () { card.classList.add('is-dragging'); });
     });
 
@@ -86,7 +82,6 @@
 
     columns.addEventListener('dragend', function () {
       if (draggingCard) {
-        draggingCard.removeAttribute('draggable');
         draggingCard.classList.remove('is-dragging');
       }
       draggingCard = null;
