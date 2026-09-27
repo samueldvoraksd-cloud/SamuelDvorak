@@ -4,44 +4,51 @@
       el.style.height = 'auto';
       el.style.height = el.scrollHeight + 'px';
     }
-    document.querySelectorAll('.admin-autosize').forEach(function (el) {
-      autosize(el);
-      el.addEventListener('input', function () { autosize(el); });
+    document.querySelectorAll('.admin-autosize').forEach(autosize);
+    document.addEventListener('input', function (e) {
+      if (e.target.classList.contains('admin-autosize')) autosize(e.target);
     });
 
-    document.querySelectorAll('.admin-dropzone').forEach(function (zone) {
+    // Delegated on `document` (not bound per-element at page load) so that
+    // rows added later via "+ Add ..." — cloned from a <template> — work
+    // identically to rows that were server-rendered, with no separate
+    // re-binding step. A previous per-element-binding version silently
+    // failed to attach listeners to dynamically added rows.
+    document.addEventListener('change', function (e) {
+      const input = e.target;
+      if (!input.matches('.admin-dropzone input[type="file"]')) return;
+      const zone = input.closest('.admin-dropzone');
+      const label = zone.querySelector('.admin-dropzone__label');
+      if (input.files[0] && label) label.textContent = input.files[0].name;
+    });
+
+    ['dragover', 'dragenter'].forEach(function (evt) {
+      document.addEventListener(evt, function (e) {
+        const zone = e.target.closest && e.target.closest('.admin-dropzone');
+        if (!zone) return;
+        e.preventDefault();
+        zone.classList.add('is-dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(function (evt) {
+      document.addEventListener(evt, function (e) {
+        const zone = e.target.closest && e.target.closest('.admin-dropzone');
+        if (!zone) return;
+        e.preventDefault();
+        zone.classList.remove('is-dragover');
+      });
+    });
+
+    document.addEventListener('drop', function (e) {
+      const zone = e.target.closest && e.target.closest('.admin-dropzone');
+      if (!zone) return;
       const input = zone.querySelector('input[type="file"]');
       const label = zone.querySelector('.admin-dropzone__label');
-      if (!input) return;
-
-      // The file input is a full-size, opacity:0 overlay covering the whole
-      // zone (see admin.css), so a real click already lands directly on it —
-      // no JS needed to open the picker, no forwarding to get wrong.
-      input.addEventListener('change', function () {
-        alert('DEBUG: change event fired. Files selected: ' + input.files.length + (input.files[0] ? (' — ' + input.files[0].name) : ''));
-        if (input.files[0] && label) label.textContent = input.files[0].name;
-      });
-
-      ['dragover', 'dragenter'].forEach(function (evt) {
-        zone.addEventListener(evt, function (e) {
-          e.preventDefault();
-          zone.classList.add('is-dragover');
-        });
-      });
-
-      ['dragleave', 'drop'].forEach(function (evt) {
-        zone.addEventListener(evt, function (e) {
-          e.preventDefault();
-          zone.classList.remove('is-dragover');
-        });
-      });
-
-      zone.addEventListener('drop', function (e) {
-        if (e.dataTransfer.files[0]) {
-          input.files = e.dataTransfer.files;
-          if (label) label.textContent = e.dataTransfer.files[0].name;
-        }
-      });
+      if (input && e.dataTransfer.files[0]) {
+        input.files = e.dataTransfer.files;
+        if (label) label.textContent = e.dataTransfer.files[0].name;
+      }
     });
 
     document.body.addEventListener('click', function (event) {
