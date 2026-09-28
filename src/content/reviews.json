@@ -1,7 +1,7 @@
 [
   {
     "reviewerName": "Kumail Qazilbash",
-    "rating": 5,
+    "rating": "5",
     "reviewDate": "September 2026",
     "text": "Sam D. is a great instructor at Brazos Valley Flight Services. He's very straightforward, realistic, and doesn't sugarcoat anything, which I really appreciate as a student pilot. He's especially great for students who are serious and committed to becoming better pilots. Sam has helped me a lot throughout my training, and I'm grateful for the time and guidance he's given me. Highly recommend him to anyone looking for an honest and knowledgeable instructor.",
     "photo": "/images/reviews/kumail-qazilbash-solo.jpg",
@@ -10,7 +10,7 @@
   },
   {
     "reviewerName": "",
-    "rating": 0,
+    "rating": "5",
     "reviewDate": "",
     "text": "",
     "photo": "/images/reviews/ajay-gundanna-checkride.jpg",
@@ -19,7 +19,7 @@
   },
   {
     "reviewerName": "Cuatro Smart",
-    "rating": 5,
+    "rating": "5",
     "reviewDate": "September 2026",
     "text": "Sam Dvorak has been an excellent CFI throughout the process of attaining my PPL. He's got a wellspring of knowledge regarding all the aircraft's at BVFS due to previous mechanical work. Not to mention, his ability to teach is superb; he's extremely patient and very encouraging! I highly recommend y'all to ask for Sam if you want to have an amazing journey in attempting to get any license, certification, or simply want an amazing flight experience.",
     "photo": "/images/reviews/john-smart-solo.jpg",
@@ -28,7 +28,7 @@
   },
   {
     "reviewerName": "Gabriel Tacheny",
-    "rating": 5,
+    "rating": "5",
     "reviewDate": "September 2026",
     "text": "I've been flying here for the past few months with Samuel Dvorak and have been extremely satisfied the entire time. Not only is the flight school itself well rounded but the pilots as well. Their knowledge and personality make learning the mechanics and getting comfortable flying so easy. A trait I admire more about my own instructor Sam is that he is always letting me lead when flying and allows me to make mistakes to continue improving. I just recently had my solo at Easterwood and felt extremely ready and comfortable because of my training. I would highly recommend flying with Brazos valley and more importantly with Sam if you get the chance!",
     "photo": "/images/reviews/gabriel-tacheny-solo.jpg",
@@ -37,7 +37,7 @@
   },
   {
     "reviewerName": "Adrian",
-    "rating": 5,
+    "rating": "5",
     "reviewDate": "",
     "text": "My first solo",
     "photo": "/images/reviews/img-3998-1790475896404.jpeg",
@@ -46,7 +46,7 @@
   },
   {
     "reviewerName": "Chase Mann",
-    "rating": 5,
+    "rating": "5",
     "reviewDate": "June 2026",
     "text": "Had a checkout flight with Samuel Dvorak. I called about availability and they had me in a plane within a couple hours. Great dude, very knowledgeable and friendly. 10/10 would recommend",
     "photo": "",
@@ -55,11 +55,20 @@
   },
   {
     "reviewerName": "Jack Harvey",
-    "rating": 5,
+    "rating": "5",
     "reviewDate": "September 2026",
     "text": "Everytime I fly up there with my CFI Samuel Dvorak, I feel comfortable and confident. He has a lot of patience and explains things that make greater sense to me. I've taken in a lot of information that made sense and seen lots of improvement with my skills thanks to him. He really knows his stuff.",
     "photo": "",
     "caption": "",
     "column": "right"
+  },
+  {
+    "reviewerName": "James Davis",
+    "rating": "5",
+    "reviewDate": "September 2026",
+    "text": "I have the privilege of knowing Sam from before he was an instructor, as I was one of his. Sam is the kind of person who knows topics in depth but always sticks to the most important elements in improving - keeping things efficient and on-track. His students are fortunate!",
+    "photo": "",
+    "caption": "",
+    "column": "left"
   }
 ]
